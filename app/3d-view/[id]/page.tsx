@@ -1,62 +1,75 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import Link from "next/link"
-import { ArrowLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { getProductById } from "@/lib/data"
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, useGLTF, useTexture, Environment, Center } from "@react-three/drei"
-import { easing } from "maath"
-import { useFrame } from "@react-three/fiber"
-import * as THREE from "three"
+import { useState, useRef } from "react";
+import Link from "next/link";
+import { ArrowLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { getProductById } from "@/lib/data";
+import { Canvas } from "@react-three/fiber";
+import {
+  OrbitControls,
+  useGLTF,
+  useTexture,
+  Environment,
+  Center,
+} from "@react-three/drei";
+import { easing } from "maath";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
 // Define the shirt model and available designs
-const designURLs = ["/designs/design1.png", "/designs/design2.png", "/designs/design3.png"]
+const designURLs = [
+  "/designs/design1.png",
+  "/designs/design2.png",
+  "/designs/design3.png",
+  "/designs/design4.png",
+];
 
 // Define types for the GLB model
 type GLTFResult = {
   nodes: {
-    T_Shirt_male: THREE.Mesh
-  }
+    T_Shirt_male: THREE.Mesh;
+  };
   materials: {
-    lambert1: THREE.MeshStandardMaterial
-  }
-}
+    lambert1: THREE.MeshStandardMaterial;
+  };
+};
 
 const Shirt = ({ designURL, color }: { designURL: string; color: string }) => {
   // Load the shirt model from the GLB file
-  const { nodes, materials } = useGLTF("/shirt_baked.glb") as unknown as GLTFResult
+  const { nodes, materials } = useGLTF(
+    "/shirt_baked.glb",
+  ) as unknown as GLTFResult;
 
   // Load the selected design as a texture
-  const texture = useTexture(designURL)
+  const texture = useTexture(designURL);
 
   // Get color based on selection
   const getShirtColor = () => {
     switch (color) {
       case "white":
-        return new THREE.Color(0xffffff)
+        return new THREE.Color(0xffffff);
       case "black":
-        return new THREE.Color(0x222222)
+        return new THREE.Color(0x222222);
       case "blue":
-        return new THREE.Color(0x3b82f6)
+        return new THREE.Color(0x3b82f6);
       case "red":
-        return new THREE.Color(0xef4444)
+        return new THREE.Color(0xef4444);
       default:
-        return new THREE.Color(0xffffff)
+        return new THREE.Color(0xffffff);
     }
-  }
+  };
 
   // Apply smooth color transitions
   useFrame((_, delta) => {
     if (materials.lambert1) {
-      easing.dampC(materials.lambert1.color, getShirtColor(), 0.25, delta)
+      easing.dampC(materials.lambert1.color, getShirtColor(), 0.25, delta);
     }
-  })
+  });
 
   return (
     <group>
@@ -71,53 +84,57 @@ const Shirt = ({ designURL, color }: { designURL: string; color: string }) => {
         <meshStandardMaterial map={texture} color={getShirtColor()} />
       </mesh>
     </group>
-  )
-}
+  );
+};
 
 // Camera rig to handle rotation and positioning
 interface CameraRigProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const CameraRig = ({ children }: CameraRigProps) => {
-  const group = useRef<THREE.Group>(null)
+  const group = useRef<THREE.Group>(null);
 
   useFrame((state, delta) => {
     // Set the initial position based on screen size
-    const isBreakpoint = window.innerWidth <= 1260
-    const isMobile = window.innerWidth <= 600
+    const isBreakpoint = window.innerWidth <= 1260;
+    const isMobile = window.innerWidth <= 600;
 
-    let targetPosition: [number, number, number] = [-0.4, 0, 2]
-    if (isBreakpoint) targetPosition = [0, 0, 2]
-    if (isMobile) targetPosition = [0, 0.2, 2.5]
+    let targetPosition: [number, number, number] = [-0.4, 0, 2];
+    if (isBreakpoint) targetPosition = [0, 0, 2];
+    if (isMobile) targetPosition = [0, 0.2, 2.5];
 
     // Smoothly move camera to target position
-    easing.damp3(state.camera.position, targetPosition, 0.25, delta)
+    easing.damp3(state.camera.position, targetPosition, 0.25, delta);
 
     // Rotate model based on mouse position
     if (group.current) {
       easing.dampE(
         group.current.rotation,
-        [state.pointer.y / 10, -state.pointer.x / 5, 0] as [number, number, number],
+        [state.pointer.y / 10, -state.pointer.x / 5, 0] as [
+          number,
+          number,
+          number,
+        ],
         0.25,
         delta,
-      )
+      );
     }
-  })
+  });
 
-  return <group ref={group}>{children}</group>
-}
+  return <group ref={group}>{children}</group>;
+};
 
 interface ThreeDViewPageProps {
   params: {
-    id: string
-  }
+    id: string;
+  };
 }
 
 export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
-  const product = getProductById(params.id)
-  const [selectedColor, setSelectedColor] = useState("black")
-  const [selectedDesign, setSelectedDesign] = useState(designURLs[0])
+  const product = getProductById(params.id);
+  const [selectedColor, setSelectedColor] = useState("black");
+  const [selectedDesign, setSelectedDesign] = useState(designURLs[0]);
 
   if (!product) {
     return (
@@ -127,7 +144,7 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
           <Link href="/shop">Back to Shop</Link>
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -143,7 +160,10 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
             Shop
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <Link href={`/product/${product.id}`} className="hover:text-foreground">
+          <Link
+            href={`/product/${product.id}`}
+            className="hover:text-foreground"
+          >
             {product.name}
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
@@ -188,7 +208,10 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
           <div className="lg:w-80 flex-shrink-0">
             <div className="sticky top-24">
               <Button asChild variant="outline" size="sm" className="mb-6">
-                <Link href={`/product/${product.id}`} className="flex items-center">
+                <Link
+                  href={`/product/${product.id}`}
+                  className="flex items-center"
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Product
                 </Link>
@@ -196,7 +219,8 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
 
               <h1 className="text-2xl font-bold mb-4">{product.name}</h1>
               <p className="text-foreground/70 mb-6">
-                Explore this product in 3D. Rotate, zoom, and see it from all angles.
+                Explore this product in 3D. Rotate, zoom, and see it from all
+                angles.
               </p>
 
               <div className="space-y-6">
@@ -206,32 +230,55 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                     <Label htmlFor="color" className="text-base font-medium">
                       Color
                     </Label>
-                    <span className="text-foreground/60 text-sm capitalize">{selectedColor}</span>
+                    <span className="text-foreground/60 text-sm capitalize">
+                      {selectedColor}
+                    </span>
                   </div>
-                  <RadioGroup id="color" value={selectedColor} onValueChange={setSelectedColor} className="flex gap-2">
+                  <RadioGroup
+                    id="color"
+                    value={selectedColor}
+                    onValueChange={setSelectedColor}
+                    className="flex gap-2"
+                  >
                     <div className="flex items-center">
-                      <RadioGroupItem id="black" value="black" className="peer sr-only" />
+                      <RadioGroupItem
+                        id="black"
+                        value="black"
+                        className="peer sr-only"
+                      />
                       <Label
                         htmlFor="black"
                         className="h-8 w-8 rounded-full bg-black border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
                       />
                     </div>
                     <div className="flex items-center">
-                      <RadioGroupItem id="white" value="white" className="peer sr-only" />
+                      <RadioGroupItem
+                        id="white"
+                        value="white"
+                        className="peer sr-only"
+                      />
                       <Label
                         htmlFor="white"
                         className="h-8 w-8 rounded-full bg-white border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
                       />
                     </div>
                     <div className="flex items-center">
-                      <RadioGroupItem id="blue" value="blue" className="peer sr-only" />
+                      <RadioGroupItem
+                        id="blue"
+                        value="blue"
+                        className="peer sr-only"
+                      />
                       <Label
                         htmlFor="blue"
                         className="h-8 w-8 rounded-full bg-blue-500 border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
                       />
                     </div>
                     <div className="flex items-center">
-                      <RadioGroupItem id="red" value="red" className="peer sr-only" />
+                      <RadioGroupItem
+                        id="red"
+                        value="red"
+                        className="peer sr-only"
+                      />
                       <Label
                         htmlFor="red"
                         className="h-8 w-8 rounded-full bg-red-500 border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
@@ -242,14 +289,18 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
 
                 {/* Design Selection */}
                 <div>
-                  <Label className="text-base font-medium block mb-2">Design</Label>
+                  <Label className="text-base font-medium block mb-2">
+                    Design
+                  </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {designURLs.map((url, index) => (
                       <div
                         key={index}
                         onClick={() => setSelectedDesign(url)}
                         className={`aspect-square rounded-md overflow-hidden border cursor-pointer ${
-                          selectedDesign === url ? "ring-2 ring-accent" : "border-border"
+                          selectedDesign === url
+                            ? "ring-2 ring-accent"
+                            : "border-border"
                         }`}
                       >
                         <div className="w-full h-full bg-secondary/20 flex items-center justify-center">
@@ -271,13 +322,14 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                 </div>
 
                 {/* Add to Cart */}
-                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">Add to Cart</Button>
+                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                  Add to Cart
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
-

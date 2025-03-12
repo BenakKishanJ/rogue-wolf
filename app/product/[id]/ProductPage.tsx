@@ -133,7 +133,7 @@ export default function ProductPage({
                   />
                 ))}
               </div>
-              <span className="text-primary-foreground/60 text-sm">
+              <span className="text-black text-sm">
                 ({Math.floor(Math.random() * 100) + 50} reviews)
               </span>
             </div>
@@ -142,15 +142,15 @@ export default function ProductPage({
               {product.discount > 0 ? (
                 <div className="flex items-center gap-3">
                   <span className="text-3xl font-montserrat font-bold">
-                    ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                    ₹{(product.price * (1 - product.discount / 100)).toFixed(2)}
                   </span>
                   <span className="text-primary-foreground/60 line-through text-lg">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toFixed(2)}
                   </span>
                 </div>
               ) : (
                 <span className="text-3xl font-montserrat font-bold">
-                  ${product.price.toFixed(2)}
+                  ₹{product.price.toFixed(2)}
                 </span>
               )}
             </div>
