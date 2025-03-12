@@ -80,8 +80,8 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-bold mb-1">Email Us</h3>
                   <p className="text-primary-foreground/70">
-                    <a href="mailto:info@prismtshirts.com" className="hover:text-accent">
-                      info@prismtshirts.com
+                    <a href="mailto:info@rougewolftshirts.com" className="hover:text-accent">
+                      info@rougewolftshirts.com
                     </a>
                   </p>
                 </div>
@@ -244,7 +244,7 @@ export default function ContactPage() {
               Didn't find what you're looking for? Contact our support team.
             </p>
             <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              <a href="mailto:support@prismtshirts.com">Email Support</a>
+              <a href="mailto:support@rougewolftshirts.com">Email Support</a>
             </Button>
           </div>
         </div>

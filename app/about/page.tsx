@@ -1,7 +1,7 @@
-import Link from "next/link"
-import Image from "next/image"
-import { ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
   return (
@@ -21,17 +21,25 @@ export default function AboutPage() {
           <div>
             <h1 className="text-3xl md:text-5xl font-bold mb-6">Our Story</h1>
             <p className="text-primary-foreground/70 mb-6">
-              PRISM was founded in 2020 with a simple mission: to revolutionize the way people shop for t-shirts online.
-              We recognized the limitations of traditional e-commerce and set out to create an immersive shopping
-              experience that bridges the gap between digital and physical retail.
+              ROGUE WOLF was founded in 2020 with a simple mission: to
+              revolutionize the way people shop for t-shirts online. We
+              recognized the limitations of traditional e-commerce and set out
+              to create an immersive shopping experience that bridges the gap
+              between digital and physical retail.
             </p>
             <p className="text-primary-foreground/70">
-              Our team of fashion designers, 3D artists, and technology experts work together to bring you premium
-              quality t-shirts with innovative features like 3D preview and virtual try-on technology.
+              Our team of fashion designers, 3D artists, and technology experts
+              work together to bring you premium quality t-shirts with
+              innovative features like 3D preview and virtual try-on technology.
             </p>
           </div>
           <div className="relative aspect-square rounded-xl overflow-hidden">
-            <Image src="/placeholder.svg?height=600&width=600" alt="About PRISM" fill className="object-cover" />
+            <Image
+              src="/placeholder.svg?height=600&width=600"
+              alt="About ROGUE WOLF"
+              fill
+              className="object-cover"
+            />
           </div>
         </div>
 
@@ -40,17 +48,20 @@ export default function AboutPage() {
           <div className="bg-secondary p-8 rounded-xl">
             <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
             <p className="text-primary-foreground/70">
-              To provide customers with an unparalleled online shopping experience through innovative technology and
-              premium quality products. We aim to reduce returns and increase customer satisfaction by allowing shoppers
-              to see exactly how our products will look before they buy.
+              To provide customers with an unparalleled online shopping
+              experience through innovative technology and premium quality
+              products. We aim to reduce returns and increase customer
+              satisfaction by allowing shoppers to see exactly how our products
+              will look before they buy.
             </p>
           </div>
           <div className="bg-secondary p-8 rounded-xl">
             <h2 className="text-2xl font-bold mb-4">Our Vision</h2>
             <p className="text-primary-foreground/70">
-              To become the leading online destination for fashion that seamlessly integrates cutting-edge technology
-              with exceptional product quality. We envision a future where all online shopping includes immersive 3D and
-              virtual try-on experiences.
+              To become the leading online destination for fashion that
+              seamlessly integrates cutting-edge technology with exceptional
+              product quality. We envision a future where all online shopping
+              includes immersive 3D and virtual try-on experiences.
             </p>
           </div>
         </div>
@@ -60,8 +71,8 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Meet Our Team</h2>
             <p className="text-primary-foreground/70 max-w-2xl mx-auto">
-              The passionate individuals behind PRISM who are dedicated to revolutionizing your online shopping
-              experience.
+              The passionate individuals behind ROGUE WOLF who are dedicated to
+              revolutionizing your online shopping experience.
             </p>
           </div>
 
@@ -88,9 +99,17 @@ export default function AboutPage() {
                 image: "/placeholder.svg?height=400&width=400",
               },
             ].map((member) => (
-              <div key={member.name} className="bg-primary rounded-xl overflow-hidden">
+              <div
+                key={member.name}
+                className="bg-primary rounded-xl overflow-hidden"
+              >
                 <div className="aspect-square relative">
-                  <Image src={member.image || "/placeholder.svg"} alt={member.name} fill className="object-cover" />
+                  <Image
+                    src={member.image || "/placeholder.svg"}
+                    alt={member.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{member.name}</h3>
@@ -106,14 +125,19 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Our Values</h2>
             <p className="text-primary-foreground/70 max-w-2xl mx-auto">
-              The principles that guide everything we do at PRISM.
+              The principles that guide everything we do at ROGUE WOLF.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-secondary p-6 rounded-xl">
               <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-6 w-6 text-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -124,26 +148,42 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-bold mb-2">Quality</h3>
               <p className="text-primary-foreground/70">
-                We never compromise on the quality of our products or the technology that powers our platform.
+                We never compromise on the quality of our products or the
+                technology that powers our platform.
               </p>
             </div>
 
             <div className="bg-secondary p-6 rounded-xl">
               <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="h-6 w-6 text-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-2">Innovation</h3>
               <p className="text-primary-foreground/70">
-                We constantly push the boundaries of what's possible in e-commerce to create better shopping
-                experiences.
+                We constantly push the boundaries of what's possible in
+                e-commerce to create better shopping experiences.
               </p>
             </div>
 
             <div className="bg-secondary p-6 rounded-xl">
               <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-6 w-6 text-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -154,7 +194,8 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-bold mb-2">Customer Focus</h3>
               <p className="text-primary-foreground/70">
-                Everything we do is designed to enhance the customer experience and exceed expectations.
+                Everything we do is designed to enhance the customer experience
+                and exceed expectations.
               </p>
             </div>
           </div>
@@ -162,17 +203,22 @@ export default function AboutPage() {
 
         {/* CTA */}
         <div className="bg-accent/10 rounded-xl p-8 md:p-12 text-center">
-          <h2 className="text-3xl font-bold mb-4">Join the PRISM Revolution</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Join the ROGUE WOLF Revolution
+          </h2>
           <p className="text-primary-foreground/70 max-w-2xl mx-auto mb-6">
-            Experience the future of online t-shirt shopping with our innovative 3D preview and virtual try-on
-            technology.
+            Experience the future of online t-shirt shopping with our innovative
+            3D preview and virtual try-on technology.
           </p>
-          <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button
+            asChild
+            size="lg"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground"
+          >
             <Link href="/shop">Shop Now</Link>
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }
-

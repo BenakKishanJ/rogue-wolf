@@ -6,6 +6,7 @@ import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,9 +39,16 @@ export default function Header() {
       <div className="container flex items-center justify-between">
         <Link
           href="/"
-          className="text-2xl font-mono font-bold tracking-tight text-black"
+          className="flex items-center text-2xl font-mono font-bold tracking-tight text-black"
         >
-          PRISM
+          <Image
+            src="/logo.png"
+            alt="Rogue Wolf Logo"
+            width={40}
+            height={40}
+            className="mr-2" // Adds spacing between the logo and text
+          />
+          ROGUE WOLF
         </Link>
 
         {/* Desktop Navigation */}
@@ -89,7 +97,7 @@ export default function Header() {
                     href="/"
                     className="text-2xl font-mono font-bold tracking-tight text-black"
                   >
-                    PRISM
+                    ROGUE WOLF
                   </Link>
                 </div>
 

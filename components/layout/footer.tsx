@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="space-y-4">
-            <h4 className="text-xl font-mono font-bold">PRISM</h4>
+            <h4 className="text-xl font-mono font-bold">ROGUE WOLF</h4>
             <p className="text-lavender-blush/70 text-sm font-mono">
               Premium t-shirts with innovative 3D preview and virtual try-on technology.
             </p>
@@ -101,7 +101,7 @@ export default function Footer() {
 
         <div className="border-t border-gray/30 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-lavender-blush/70 text-xs font-mono">
-            © {new Date().getFullYear()} PRISM. ALL RIGHTS RESERVED.
+            © {new Date().getFullYear()} ROGUE WOLF. ALL RIGHTS RESERVED.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="text-lavender-blush/70 hover:text-lavender-blush text-xs font-mono">

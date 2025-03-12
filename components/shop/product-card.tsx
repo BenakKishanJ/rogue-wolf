@@ -1,12 +1,12 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Eye, ShoppingBag } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import type { Product } from "@/lib/types"
+import Link from "next/link";
+import Image from "next/image";
+import { Eye, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { Product } from "@/lib/types";
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -20,7 +20,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
 
-        {product.isNew && <Badge className="absolute top-3 left-3 bg-flame text-lavender-blush">New</Badge>}
+        {product.isNew && (
+          <Badge className="absolute top-3 left-3 bg-flame text-lavender-blush">
+            New
+          </Badge>
+        )}
 
         {product.discount > 0 && (
           <Badge className="absolute top-3 right-3 bg-destructive text-destructive-foreground">
@@ -29,7 +33,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
 
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-          <Button asChild size="sm" className="bg-flame hover:bg-flame/90 text-lavender-blush font-mono">
+          <Button
+            asChild
+            size="sm"
+            className="bg-flame hover:bg-flame/90 text-lavender-blush font-mono"
+          >
             <Link href={`/product/${product.id}`}>
               <Eye className="h-4 w-4 mr-1" />
               VIEW
@@ -44,19 +52,25 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <div className="p-4">
         <Link href={`/product/${product.id}`} className="block">
-          <h3 className="font-mono font-bold text-lg mb-1 hover:text-flame transition-colors">{product.name}</h3>
+          <h3 className="font-mono font-bold text-lg mb-1 hover:text-flame transition-colors">
+            {product.name}
+          </h3>
         </Link>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {product.discount > 0 ? (
               <>
                 <span className="text-xl font-mono font-bold text-flame">
-                  ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                  ₹{(product.price * (1 - product.discount / 100)).toFixed(2)}
                 </span>
-                <span className="text-foreground/60 line-through text-sm font-mono">${product.price.toFixed(2)}</span>
+                <span className="text-foreground/60 line-through text-sm font-mono">
+                  ₹{product.price.toFixed(2)}
+                </span>
               </>
             ) : (
-              <span className="text-xl font-mono font-bold">${product.price.toFixed(2)}</span>
+              <span className="text-xl font-mono font-bold">
+                ₹{product.price.toFixed(2)}
+              </span>
             )}
           </div>
           <div className="flex items-center gap-1">
@@ -81,6 +95,5 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
