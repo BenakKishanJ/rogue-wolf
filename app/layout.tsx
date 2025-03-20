@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter, Space_Mono } from "next/font/google";
@@ -51,4 +52,3 @@ export default function RootLayout({
 }
 
 import "./globals.css";
-
