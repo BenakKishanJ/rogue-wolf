@@ -1,3 +1,4 @@
+// app/page.tsx
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import {
@@ -10,9 +11,19 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/shop/product-card";
-import { featuredProducts } from "@/lib/data";
+import { IProduct } from "@/lib/models/products"; // Adjust path based on your structure
 
-export default function Home() {
+async function fetchProducts(): Promise<IProduct[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+    cache: "no-store", // Fetch fresh data from MongoDB
+  });
+  if (!res.ok) throw new Error("Failed to fetch products");
+  return res.json();
+}
+
+export default async function Home() {
+  const products = await fetchProducts();
+
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -25,7 +36,7 @@ export default function Home() {
             Experience the future of gym wear with RogueWolf. Our premium
             apparel blends advanced fabric technology with 3D preview and
             virtual try-on, ensuring the perfect fit. Built for performance and
-            style, it moves with you—wherever the challenge takes you.{" "}
+            style, it moves with you—wherever the challenge takes you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
@@ -71,8 +82,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {products.map((product) => (
+              <ProductCard key={product._id.toString()} product={product} />
             ))}
           </div>
         </div>

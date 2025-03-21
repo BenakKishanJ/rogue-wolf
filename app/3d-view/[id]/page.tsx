@@ -1,50 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import * as React from "react"; // Add for React.use()
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { getProductById } from "@/lib/data";
+import { IProduct } from "../../../lib/models/products";
 import { Canvas } from "@react-three/fiber";
 import { Environment, Center } from "@react-three/drei";
 import Backdrop from "@/components/Backdrop";
 import CameraRig from "@/components/CameraRig";
 import Shirt from "@/components/Shirt";
 
-const designURLs = [
-  "/designs/design1.png",
-  "/designs/design2.png",
-  "/designs/design3.png",
-  "/designs/design4.png",
-];
-
 interface ThreeDViewPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>; // Update to Promise for async params
 }
 
 export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
-  const { id } = params;
-  const [selectedColor, setSelectedColor] = useState("#3b82f6");
-  const [selectedDesign, setSelectedDesign] = useState(designURLs[0]);
+  const { id } = React.use(params); // Unwrap params with React.use()
+  const [product, setProduct] = useState<IProduct | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>(""); // Default to empty, set later
 
-  // Validate product ID
-  if (!id) {
-    return (
-      <div className="container py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Invalid Product ID</h1>
-        <Button asChild>
-          <Link href="/shop">Back to Shop</Link>
-        </Button>
-      </div>
-    );
-  }
+  // Fetch product data
+  useEffect(() => {
+    async function fetchProduct() {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
+      );
+      const data = await res.json();
+      setProduct(data || null);
+      if (data && data.colors.length > 0) {
+        setSelectedColor(data.colors[0]); // Set default to first available color
+      }
+    }
+    fetchProduct();
+  }, [id]);
 
-  const product = getProductById(id);
-
+  // Validate product
   if (!product) {
     return (
       <div className="container py-20 text-center">
@@ -69,10 +63,7 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
             Shop
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <Link
-            href={`/product/${product.id}`}
-            className="hover:text-foreground"
-          >
+          <Link href={`/product/${id}`} className="hover:text-foreground">
             {product.name}
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
@@ -94,7 +85,10 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                 <CameraRig>
                   <Backdrop />
                   <Center>
-                    <Shirt color={selectedColor} logoTexture={selectedDesign} />
+                    <Shirt
+                      color={selectedColor}
+                      logoTexture={product.designImage}
+                    />
                   </Center>
                 </CameraRig>
               </Canvas>
@@ -109,10 +103,7 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
           <div className="lg:w-80 flex-shrink-0">
             <div className="sticky top-24 space-y-6">
               <Button asChild variant="outline" size="sm">
-                <Link
-                  href={`/product/${product.id}`}
-                  className="flex items-center"
-                >
+                <Link href={`/product/${id}`} className="flex items-center">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Product
                 </Link>
@@ -130,7 +121,7 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                   <div className="flex justify-between mb-2">
                     <Label className="text-base font-medium">Color</Label>
                     <span className="text-foreground/60 text-sm capitalize">
-                      {selectedColor.replace("#", "")}
+                      {selectedColor}
                     </span>
                   </div>
                   <RadioGroup
@@ -138,7 +129,7 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                     onValueChange={setSelectedColor}
                     className="flex gap-2"
                   >
-                    {["black", "white", "blue", "red"].map((color) => (
+                    {product.colors.map((color) => (
                       <div key={color} className="flex items-center">
                         <RadioGroupItem
                           value={color}
@@ -147,37 +138,12 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                         />
                         <Label
                           htmlFor={color}
-                          className={`h-8 w-8 rounded-full border cursor-pointer ring-offset-background transition-all hover:scale-110
-                            ${color === "black" ? "bg-black" : ""}
-                            ${color === "white" ? "bg-white" : ""}
-                            ${color === "blue" ? "bg-blue-500" : ""}
-                            ${color === "red" ? "bg-red-500" : ""}
-                            peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent`}
+                          className="h-8 w-8 rounded-full border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
+                          style={{ backgroundColor: color }}
                         />
                       </div>
                     ))}
                   </RadioGroup>
-                </div>
-
-                {/* Design Selector */}
-                <div>
-                  <Label className="text-base font-medium block mb-2">
-                    Design
-                  </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {designURLs.map((url, index) => (
-                      <div
-                        key={url}
-                        onClick={() => setSelectedDesign(url)}
-                        className={`aspect-square rounded-md overflow-hidden border cursor-pointer transition-all
-                          ${selectedDesign === url ? "ring-2 ring-accent" : "border-border"}`}
-                      >
-                        <div className="w-full h-full bg-secondary/20 flex items-center justify-center">
-                          <span className="text-sm">D{index + 1}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Controls Help Section */}
