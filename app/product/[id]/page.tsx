@@ -80,6 +80,15 @@ export default function ProductPage({
     }
   };
 
+  // Handle image error by setting fallback image
+  const handleImageError = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>,
+    fallbackImage: string = "/TShirt.png",
+  ) => {
+    const target = event.target as HTMLImageElement;
+    target.src = fallbackImage;
+  };
+
   return (
     <div className="animate-fade-in pt-20">
       <div className="container py-8">
@@ -101,11 +110,12 @@ export default function ProductPage({
           <div className="space-y-4">
             <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
               <Image
-                src={productImages[activeImageIndex] || "/placeholder.svg"}
+                src={productImages[activeImageIndex] || "/TShirt.png"}
                 alt={product.name}
                 fill
                 className="object-cover"
                 priority
+                onError={(e) => handleImageError(e, "/TShirt.png")}
               />
 
               {product.discount > 0 && (
@@ -127,10 +137,11 @@ export default function ProductPage({
                   onClick={() => setActiveImageIndex(index)}
                 >
                   <Image
-                    src={image || "/placeholder.svg"}
+                    src={image || "/TShirt.png"}
                     alt={`${product.name} - Image ${index + 1}`}
                     fill
                     className="object-cover"
+                    onError={(e) => handleImageError(e, "/TShirt.png")}
                   />
                 </button>
               ))}
