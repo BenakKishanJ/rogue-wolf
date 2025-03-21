@@ -1,42 +1,30 @@
-// app/try-on/[id]/page.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import * as React from "react";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { getProductById } from "@/lib/data";
+import { IProduct } from "../../../lib/models/products"; // Adjust path
 import * as poseDetection from "@tensorflow-models/pose-detection";
 import * as tf from "@tensorflow/tfjs";
 
 interface TryOnPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
-// Available shirt designs
-const designURLs = [
-  "/designs/design1.png",
-  "/designs/design2.png",
-  "/designs/design3.png",
-  "/designs/design4.png",
-];
-
 export default function TryOnPage({ params }: TryOnPageProps) {
-  const product = getProductById(params.id);
-  const [selectedColor, setSelectedColor] = useState("black");
+  const { id } = React.use(params);
+  const [product, setProduct] = useState<IProduct | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>("");
   const [cameraActive, setCameraActive] = useState(false);
 
-  // Refs for elements
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // State variables
-  const [selectedDesign, setSelectedDesign] = useState(designURLs[0]);
   const [status, setStatus] = useState("Click 'Start Camera' to begin");
   const [detector, setDetector] = useState<any>(null);
   const [designImage, setDesignImage] = useState<HTMLImageElement | null>(null);
@@ -46,11 +34,25 @@ export default function TryOnPage({ params }: TryOnPageProps) {
   const [compositeShirtImage, setCompositeShirtImage] =
     useState<HTMLImageElement | null>(null);
 
-  // Configuration
   const fixedRatio = 262 / 190; // widthOfShirt/widthOfPoint11to12
   const shirtRatioHeightWidth = 581 / 440;
 
-  // Load the base shirt image when color changes
+  // Fetch product data
+  useEffect(() => {
+    async function fetchProduct() {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
+      );
+      const data = await res.json();
+      setProduct(data || null);
+      if (data && data.colors.length > 0) {
+        setSelectedColor(data.colors[0]); // Set default to first available color
+      }
+    }
+    fetchProduct();
+  }, [id]);
+
+  // Load the base shirt image when color or cameraActive changes
   useEffect(() => {
     if (!cameraActive) return;
 
@@ -64,12 +66,12 @@ export default function TryOnPage({ params }: TryOnPageProps) {
         `Failed to load base shirt image: base_shirt_${selectedColor}.png`,
       );
     };
-    img.src = `/shirts/base_shirt_${selectedColor}.png`; // Base shirt in different colors
+    img.src = `/shirts/base_shirt_${selectedColor}.png`;
   }, [selectedColor, cameraActive]);
 
-  // Load the design image when selection changes
+  // Load the design image from product.designImage when product or cameraActive changes
   useEffect(() => {
-    if (!cameraActive) return;
+    if (!cameraActive || !product) return;
 
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -77,16 +79,15 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       setDesignImage(img);
     };
     img.onerror = () => {
-      setStatus(`Failed to load design image: ${selectedDesign}`);
+      setStatus(`Failed to load design image: ${product.designImage}`);
     };
-    img.src = selectedDesign;
-  }, [selectedDesign, cameraActive]);
+    img.src = product.designImage;
+  }, [product, cameraActive]);
 
   // Composite design onto base shirt when both images are loaded
   useEffect(() => {
     if (!designImage || !baseShirtImage) return;
 
-    // Create an off-screen canvas for compositing
     const canvas = document.createElement("canvas");
     canvas.width = baseShirtImage.width;
     canvas.height = baseShirtImage.height;
@@ -97,19 +98,15 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       return;
     }
 
-    // Draw the base shirt
     ctx.drawImage(baseShirtImage, 0, 0);
 
-    // Calculate design placement (centered on shirt chest area)
-    const designWidth = baseShirtImage.width * 0.5; // 50% of shirt width
-    const designHeight = (designWidth / designImage.width) * designImage.height; // Maintain aspect ratio
-    const designX = (baseShirtImage.width - designWidth) / 2; // Center horizontally
-    const designY = baseShirtImage.height * 0.3; // Place at 30% from top
+    const designWidth = baseShirtImage.width * 0.5;
+    const designHeight = (designWidth / designImage.width) * designImage.height;
+    const designX = (baseShirtImage.width - designWidth) / 2;
+    const designY = baseShirtImage.height * 0.3;
 
-    // Draw the design on top of the base shirt
     ctx.drawImage(designImage, designX, designY, designWidth, designHeight);
 
-    // Create a new image from the canvas
     const compositeImg = new Image();
     compositeImg.onload = () => {
       setCompositeShirtImage(compositeImg);
@@ -128,7 +125,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
 
-        // Wait for metadata to be loaded
         videoRef.current.onloadedmetadata = () => {
           if (canvasRef.current && overlayCanvasRef.current) {
             canvasRef.current.width = videoRef.current!.videoWidth;
@@ -136,7 +132,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
             overlayCanvasRef.current.width = videoRef.current!.videoWidth;
             overlayCanvasRef.current.height = videoRef.current!.videoHeight;
 
-            // Center the webcam view
             videoRef.current!.style.objectPosition = "center";
             setStatus("Webcam ready, loading model...");
           }
@@ -154,7 +149,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     try {
       setStatus("Loading pose detection model...");
 
-      // Make sure TensorFlow.js is initialized
       await tf.ready();
 
       const detectorConfig = {
@@ -184,7 +178,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     const overlayCtx = overlayCanvasRef.current.getContext("2d");
     if (!overlayCtx) return;
 
-    // Clear previous overlay
     overlayCtx.clearRect(
       0,
       0,
@@ -192,27 +185,22 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       overlayCanvasRef.current.height,
     );
 
-    // Get left and right shoulder positions
     const leftShoulder = keypoints[5];
     const rightShoulder = keypoints[6];
 
     if (leftShoulder.score > 0.3 && rightShoulder.score > 0.3) {
-      // Calculate shirt width based on shoulder distance
       const shoulderDist = Math.abs(leftShoulder.x - rightShoulder.x);
       const shirtWidth = shoulderDist * fixedRatio;
       const shirtHeight = shirtWidth * shirtRatioHeightWidth;
 
-      // Calculate position (centered on shoulders)
       const currentScale = shoulderDist / 190;
       const offsetY = 48 * currentScale;
 
-      // Position: midpoint between shoulders, adjusted with offset
       const midX = (leftShoulder.x + rightShoulder.x) / 2;
       const xPos = midX - shirtWidth / 2;
       const yPos = rightShoulder.y - offsetY;
 
       try {
-        // Draw the composite shirt
         overlayCtx.drawImage(
           compositeShirtImage,
           xPos,
@@ -226,25 +214,22 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     }
   };
 
-  // Draw keypoints (for debugging, can be disabled in production)
+  // Draw keypoints (for debugging)
   const drawKeypoints = (keypoints: any[]) => {
     if (!canvasRef.current) return;
 
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
 
-    // Clear previous drawings
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
     const confidenceThreshold = 0.4;
 
     keypoints.forEach((keypoint) => {
       if (keypoint.score > confidenceThreshold) {
-        // Draw circle at keypoint
         ctx.beginPath();
         ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
 
-        // Color based on keypoint type
         let color = "white";
         if (
           keypoint.name.includes("shoulder") ||
@@ -268,13 +253,11 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       }
     });
 
-    // Draw connections between keypoints for better visualization
     drawSkeleton(keypoints, ctx);
   };
 
   // Draw skeleton connections
   const drawSkeleton = (keypoints: any[], ctx: CanvasRenderingContext2D) => {
-    // Define connections between keypoints
     const connections = [
       ["nose", "left_eye"],
       ["nose", "right_eye"],
@@ -294,13 +277,11 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       ["right_knee", "right_ankle"],
     ];
 
-    // Create a map for quick lookup of keypoints by name
     const keypointMap: { [key: string]: any } = {};
     keypoints.forEach((keypoint) => {
       keypointMap[keypoint.name] = keypoint;
     });
 
-    // Draw the connections
     ctx.strokeStyle = "rgb(0, 255, 0)";
     ctx.lineWidth = 2;
 
@@ -329,18 +310,13 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     const detectAndRender = async () => {
       if (detector && videoRef.current && videoRef.current.readyState === 4) {
         try {
-          // Get poses
           const poses = await detector.estimatePoses(videoRef.current);
 
-          // Process if a pose is detected
           if (poses && poses.length > 0) {
             const keypoints = poses[0].keypoints;
 
-            // Overlay shirt
             overlayShirt(keypoints);
-
-            // Draw keypoints for debugging (can be commented out in production)
-            // drawKeypoints(keypoints)
+            // drawKeypoints(keypoints); // Uncomment for debugging
 
             setStatus("Detection active");
           } else {
@@ -354,7 +330,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
         }
       }
 
-      // Continue detection loop
       animationFrameId = requestAnimationFrame(detectAndRender);
     };
 
@@ -362,7 +337,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       detectAndRender();
     }
 
-    // Cleanup animation frame on unmount
     return () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -370,12 +344,14 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     };
   }, [detector, compositeShirtImage, cameraActive]);
 
+  // Start camera and model
   const startCamera = async () => {
     setCameraActive(true);
     await setupCamera();
     await loadModel();
   };
 
+  // Stop camera
   const stopCamera = () => {
     setCameraActive(false);
     if (videoRef.current && videoRef.current.srcObject) {
@@ -400,7 +376,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
   return (
     <div className="animate-fade-in pt-20">
       <div className="container py-8">
-        {/* Breadcrumb */}
         <div className="flex items-center text-sm text-foreground/60 mb-8">
           <Link href="/" className="hover:text-foreground">
             Home
@@ -410,10 +385,7 @@ export default function TryOnPage({ params }: TryOnPageProps) {
             Shop
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <Link
-            href={`/product/${product.id}`}
-            className="hover:text-foreground"
-          >
+          <Link href={`/product/${id}`} className="hover:text-foreground">
             {product.name}
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
@@ -421,7 +393,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Try-On Viewer */}
           <div className="flex-1 bg-secondary/10 rounded-xl overflow-hidden">
             {cameraActive ? (
               <div className="relative aspect-video w-full">
@@ -475,14 +446,10 @@ export default function TryOnPage({ params }: TryOnPageProps) {
             )}
           </div>
 
-          {/* Controls */}
           <div className="lg:w-80 flex-shrink-0">
             <div className="sticky top-24">
               <Button asChild variant="outline" size="sm" className="mb-6">
-                <Link
-                  href={`/product/${product.id}`}
-                  className="flex items-center"
-                >
+                <Link href={`/product/${id}`} className="flex items-center">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Product
                 </Link>
@@ -495,7 +462,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
               </p>
 
               <div className="space-y-6">
-                {/* Color Selection */}
                 <div>
                   <div className="flex justify-between mb-2">
                     <Label
@@ -514,78 +480,23 @@ export default function TryOnPage({ params }: TryOnPageProps) {
                     onValueChange={setSelectedColor}
                     className="flex gap-2"
                   >
-                    <div className="flex items-center">
-                      <RadioGroupItem
-                        id="try-on-black"
-                        value="black"
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor="try-on-black"
-                        className="h-8 w-8 rounded-full bg-black border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <RadioGroupItem
-                        id="try-on-white"
-                        value="white"
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor="try-on-white"
-                        className="h-8 w-8 rounded-full bg-white border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <RadioGroupItem
-                        id="try-on-blue"
-                        value="blue"
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor="try-on-blue"
-                        className="h-8 w-8 rounded-full bg-blue-500 border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <RadioGroupItem
-                        id="try-on-red"
-                        value="red"
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor="try-on-red"
-                        className="h-8 w-8 rounded-full bg-red-500 border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
-                      />
-                    </div>
+                    {product.colors.map((color) => (
+                      <div key={color} className="flex items-center">
+                        <RadioGroupItem
+                          id={`try-on-${color}`}
+                          value={color}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={`try-on-${color}`}
+                          className="h-8 w-8 rounded-full border border-border cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2"
+                          style={{ backgroundColor: color }}
+                        />
+                      </div>
+                    ))}
                   </RadioGroup>
                 </div>
 
-                {/* Design Selection */}
-                <div>
-                  <Label className="text-base font-medium block mb-2">
-                    Design
-                  </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {designURLs.map((url, index) => (
-                      <div
-                        key={index}
-                        onClick={() => cameraActive && setSelectedDesign(url)}
-                        className={`aspect-square rounded-md overflow-hidden border cursor-pointer ${
-                          selectedDesign === url
-                            ? "ring-2 ring-accent"
-                            : "border-border"
-                        } ${!cameraActive && "opacity-50 cursor-not-allowed"}`}
-                      >
-                        <div className="w-full h-full bg-secondary/20 flex items-center justify-center">
-                          <span className="text-sm">D{index + 1}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Status Display */}
                 {cameraActive && (
                   <div className="bg-secondary/10 rounded-lg p-4">
                     <h3 className="font-medium mb-2">Status</h3>
@@ -593,7 +504,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
                   </div>
                 )}
 
-                {/* Privacy Notice */}
                 <div className="bg-secondary/10 rounded-lg p-4">
                   <h3 className="font-medium mb-2">Privacy Notice</h3>
                   <p className="text-sm text-foreground/70">
@@ -602,7 +512,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
                   </p>
                 </div>
 
-                {/* Instructions */}
                 {cameraActive && (
                   <div className="bg-secondary/10 rounded-lg p-4">
                     <h3 className="font-medium mb-2">Instructions</h3>
@@ -614,7 +523,6 @@ export default function TryOnPage({ params }: TryOnPageProps) {
                   </div>
                 )}
 
-                {/* Camera Controls */}
                 {cameraActive ? (
                   <Button
                     variant="outline"
