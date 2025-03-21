@@ -15,9 +15,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ProductCard from "@/components/shop/product-card";
-import { featuredProducts } from "@/lib/data";
+import { IProduct } from "../../lib/models/products"; // Adjust path based on structure
 
-export default function ShopPage() {
+async function fetchProducts(): Promise<IProduct[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch products");
+  return res.json();
+}
+
+export default async function ShopPage() {
+  const products = await fetchProducts();
   return (
     <div className="animate-fade-in pt-20">
       <div className="container py-8">
@@ -396,8 +405,8 @@ export default function ShopPage() {
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product) => (
+                <ProductCard key={product._id.toString()} product={product} />
               ))}
             </div>
 

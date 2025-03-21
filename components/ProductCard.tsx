@@ -1,18 +1,19 @@
-import Image from "next/image"
-import Link from "next/link"
-import type { IProduct } from "@/models/Product"
+// components/shop/product-card.tsx
+import Image from "next/image";
+import Link from "next/link";
+import { IProduct } from "@/lib/models/products"; // Adjust path based on your structure
 
 interface ProductCardProps {
-  product: IProduct
+  product: IProduct;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Link href={`/3d-view/${product.id}`}>
+    <Link href={`/3d-view/${product._id.toString()}`}>
       <div className="group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
         <div className="relative h-64 w-full bg-gray-100">
           <Image
-            src={product.imageUrl || "/placeholder.svg"}
+            src={product.designImage || "/placeholder.svg"} // Use designImage from MongoDB schema
             alt={product.name}
             fill
             style={{ objectFit: "cover" }}
@@ -34,6 +35,5 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
     </Link>
-  )
+  );
 }
-

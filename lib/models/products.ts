@@ -1,5 +1,5 @@
-// lib/models/products.ts
-import mongoose, { Document, Model } from "mongoose";
+// lib/models/product.ts
+import mongoose, { Document, Model, Types } from "mongoose";
 
 // Define the Product data interface
 export interface IProductData {
@@ -19,7 +19,9 @@ export interface IProductData {
 }
 
 // Define the Product document interface
-export interface IProduct extends Document, IProductData {}
+export interface IProduct extends Document, IProductData {
+  _id: Types.ObjectId; // Explicitly declare _id
+}
 
 // Define the schema without an explicit type
 const productSchema = new mongoose.Schema(

@@ -1,12 +1,13 @@
+// /components/shop/product-card.tsx
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { Product } from "@/lib/types";
+import { IProduct } from "../../lib/models/products"; // Adjust path based on your structure
 
 interface ProductCardProps {
-  product: Product;
+  product: IProduct;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -14,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="group product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md">
       <div className="relative aspect-square overflow-hidden">
         <Image
-          src={product.image || "/placeholder.svg"}
+          src={product.designImage || "/placeholder.svg"}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -38,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             size="sm"
             className="bg-flame hover:bg-flame/90 text-lavender-blush font-mono"
           >
-            <Link href={`/product/${product.id}`}>
+            <Link href={`/product/${product._id.toString()}`}>
               <Eye className="h-4 w-4 mr-1" />
               VIEW
             </Link>
@@ -51,7 +52,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       <div className="p-4">
-        <Link href={`/product/${product.id}`} className="block">
+        <Link href={`/product/${product._id.toString()}`} className="block">
           <h3 className="font-mono font-bold text-lg mb-1 hover:text-flame transition-colors">
             {product.name}
           </h3>
