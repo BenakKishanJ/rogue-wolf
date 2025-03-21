@@ -1,11 +1,10 @@
 // app/layout.tsx
+import { ReactNode } from "react";
+import ClientLayout from "@/components/ClientLayout"; //
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter, Space_Mono } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
+import "@/styles/globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,28 +23,13 @@ export const metadata: Metadata = {
     "Discover our collection of premium t-shirts with 3D preview and virtual try-on technology",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${spaceMono.variable} font-sans bg-background text-foreground`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </ThemeProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
