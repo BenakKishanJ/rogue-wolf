@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import * as React from "react"; // Add for React.use()
@@ -34,12 +35,42 @@ export default function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params); // Unwrap params with React.use()
+  const { data: session } = useSession();
   const [product, setProduct] = useState<IProduct | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [selectedColor, setSelectedColor] = useState("black");
   const [selectedSize, setSelectedSize] = useState("m");
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const addToCart = async () => {
+    if (!session?.user) {
+      alert("Please sign in to add items to your cart.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id, // Safe now with null check above
+          productId: id,
+          quantity,
+          color: selectedColor,
+          size: selectedSize,
+        }),
+      });
+      if (res.ok) {
+        alert("Added to cart!");
+      } else {
+        throw new Error("Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Error adding to cart");
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -308,7 +339,10 @@ export default function ProductPage({
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button className="bg-accent hover:bg-accent/90 text-accent-foreground flex-1">
+              <Button
+                className="bg-accent hover:bg-accent/90 text-accent-foreground flex-1"
+                onClick={addToCart}
+              >
                 <ShoppingBag className="mr-2 h-5 w-5" />
                 Add to Cart
               </Button>

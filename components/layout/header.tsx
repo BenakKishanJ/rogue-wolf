@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +12,7 @@ import Image from "next/image";
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +48,7 @@ export default function Header() {
             alt="Rogue Wolf Logo"
             width={40}
             height={40}
-            className="mr-2" // Adds spacing between the logo and text
+            className="mr-2"
           />
           ROGUE WOLF
         </Link>
@@ -72,15 +74,50 @@ export default function Header() {
             <span className="sr-only">Search</span>
           </Button>
 
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <User className="h-5 w-5" />
-            <span className="sr-only">Account</span>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/cart">
+              <ShoppingBag className="h-5 w-5" />
+              <span className="sr-only">Cart</span>
+            </Link>
           </Button>
 
-          <Button variant="ghost" size="icon">
-            <ShoppingBag className="h-5 w-5" />
-            <span className="sr-only">Cart</span>
-          </Button>
+          {status === "loading" ? (
+            <Button variant="ghost" size="icon" disabled>
+              <User className="h-5 w-5" />
+              <span className="sr-only">Loading</span>
+            </Button>
+          ) : session ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="hidden md:flex"
+              >
+                <Link href="/account">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Account</span>
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="hidden md:flex"
+              >
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signIn("google", { callbackUrl: "/" })}
+              className="hidden md:flex"
+            >
+              Sign In
+            </Button>
+          )}
 
           {/* Mobile Menu */}
           <Sheet>
@@ -111,16 +148,44 @@ export default function Header() {
                       {link.name}
                     </Link>
                   ))}
+                  <Link
+                    href="/cart"
+                    className="text-foreground text-lg font-mono font-bold"
+                  >
+                    CART
+                  </Link>
                 </nav>
 
                 <div className="mt-auto pt-8 flex flex-col space-y-4">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start font-mono"
-                  >
-                    <User className="h-5 w-5 mr-2" />
-                    ACCOUNT
-                  </Button>
+                  {session ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start font-mono"
+                        asChild
+                      >
+                        <Link href="/account">
+                          <User className="h-5 w-5 mr-2" />
+                          ACCOUNT
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start font-mono"
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                      >
+                        SIGN OUT
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start font-mono"
+                      onClick={() => signIn("google", { callbackUrl: "/" })}
+                    >
+                      SIGN IN
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="w-full justify-start font-mono"
