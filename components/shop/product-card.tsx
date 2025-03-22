@@ -1,16 +1,55 @@
-// /components/shop/product-card.tsx
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IProduct } from "../../lib/models/products"; // Adjust path based on your structure
+import { useSession } from "next-auth/react";
 
 interface ProductCardProps {
   product: IProduct;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { data: session, status } = useSession();
+
+  const addToCart = async () => {
+    if (status === "loading") {
+      alert("Please wait while we load your session.");
+      return;
+    }
+
+    if (!session?.user) {
+      alert("Please sign in to add items to your cart.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          productId: product._id.toString(),
+          quantity: 1, // Default quantity
+          color: product.colors[0] || "default", // Default to first color
+          size: product.sizes[0] || "M", // Default to first size or "M"
+        }),
+      });
+
+      if (res.ok) {
+        alert(`${product.name} added to cart!`);
+      } else {
+        throw new Error("Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Failed to add item to cart");
+    }
+  };
+
   return (
     <div className="group product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md">
       <div className="relative aspect-square overflow-hidden">
@@ -44,7 +83,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               VIEW
             </Link>
           </Button>
-          <Button size="sm" variant="secondary" className="font-mono">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="font-mono"
+            onClick={addToCart}
+          >
             <ShoppingBag className="h-4 w-4 mr-1" />
             ADD
           </Button>
