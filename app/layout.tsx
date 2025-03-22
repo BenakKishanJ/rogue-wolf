@@ -5,6 +5,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,5 +35,3 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
-import "./globals.css";

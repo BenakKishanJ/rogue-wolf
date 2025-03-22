@@ -23,6 +23,8 @@ import ProductCard from "@/components/shop/product-card";
 import { IProduct } from "../../../lib/models/products"; // Adjust path
 import connectToDatabase from "../../../lib/mongodb"; // Adjust path
 import Product from "../../../lib/models/products"; // Adjust path
+import { useToast } from "@/hooks/use-toast"; // Adjust path
+import { ToastAction } from "@/components/ui/toast"; // Adjust path
 
 interface ProductPageProps {
   product: IProduct | null;
@@ -42,10 +44,29 @@ export default function ProductPage({
   const [selectedSize, setSelectedSize] = useState("m");
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { toast } = useToast();
 
   const addToCart = async () => {
     if (!session?.user) {
-      alert("Please sign in to add items to your cart.");
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to add items to your cart.",
+        variant: "destructive",
+        action: (
+          <ToastAction altText="Sign In" asChild>
+            <Link href="/auth/signin">Sign In</Link>
+          </ToastAction>
+        ),
+      });
+      return;
+    }
+
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product not loaded yet. Please try again.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -54,21 +75,34 @@ export default function ProductPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: session.user.id, // Safe now with null check above
+          userId: session.user.id,
           productId: id,
           quantity,
           color: selectedColor,
           size: selectedSize,
         }),
       });
+
       if (res.ok) {
-        alert("Added to cart!");
+        toast({
+          title: "Added to Cart",
+          description: `${product.name} has been added to your cart.`,
+          action: (
+            <ToastAction altText="View Cart" asChild>
+              <Link href="/cart">View Cart</Link>
+            </ToastAction>
+          ),
+        });
       } else {
         throw new Error("Failed to add to cart");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Error adding to cart");
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart.",
+        variant: "destructive",
+      });
     }
   };
 

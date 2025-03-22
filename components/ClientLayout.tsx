@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "next-auth/react";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
   return (
@@ -20,6 +21,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>
+          <Toaster />
           <Footer />
         </div>
       </ThemeProvider>

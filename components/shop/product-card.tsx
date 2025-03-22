@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IProduct } from "../../lib/models/products"; // Adjust path based on your structure
 import { useSession } from "next-auth/react";
+import { useToast } from "@/hooks/use-toast"; // Adjust path
+import { ToastAction } from "@/components/ui/toast"; // Adjust path
 
 interface ProductCardProps {
   product: IProduct;
@@ -14,15 +16,29 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { data: session, status } = useSession();
+  const { toast } = useToast();
 
   const addToCart = async () => {
     if (status === "loading") {
-      alert("Please wait while we load your session.");
+      toast({
+        title: "Please Wait",
+        description: "Loading your session...",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!session?.user) {
-      alert("Please sign in to add items to your cart.");
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to add items to your cart.",
+        variant: "destructive",
+        action: (
+          <ToastAction altText="Sign In" asChild>
+            <Link href="/auth/signin">Sign In</Link>
+          </ToastAction>
+        ),
+      });
       return;
     }
 
@@ -33,23 +49,34 @@ export default function ProductCard({ product }: ProductCardProps) {
         body: JSON.stringify({
           userId: session.user.id,
           productId: product._id.toString(),
-          quantity: 1, // Default quantity
-          color: product.colors[0] || "default", // Default to first color
-          size: product.sizes[0] || "M", // Default to first size or "M"
+          quantity: 1,
+          color: product.colors[0] || "default",
+          size: product.sizes[0] || "M",
         }),
       });
 
       if (res.ok) {
-        alert(`${product.name} added to cart!`);
+        toast({
+          title: "Added to Cart",
+          description: `${product.name} has been added to your cart.`,
+          action: (
+            <ToastAction altText="View Cart" asChild>
+              <Link href="/cart">View Cart</Link>
+            </ToastAction>
+          ),
+        });
       } else {
         throw new Error("Failed to add to cart");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add item to cart");
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart.",
+        variant: "destructive",
+      });
     }
   };
-
   return (
     <div className="group product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md">
       <div className="relative aspect-square overflow-hidden">
