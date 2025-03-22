@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={`${inter.variable} ${spaceMono.variable} font-sans bg-background text-foreground`}
       >
         <ClientLayout>{children}</ClientLayout>
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </body>
     </html>
   );
