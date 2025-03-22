@@ -99,6 +99,16 @@ export default function Header() {
                   <span className="sr-only">Account</span>
                 </Link>
               </Button>
+              {status === "authenticated" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="hidden md:flex"
+                >
+                  <Link href="/orders">Orders</Link>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -169,6 +179,15 @@ export default function Header() {
                           ACCOUNT
                         </Link>
                       </Button>
+                      {session && (
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start font-mono"
+                          asChild
+                        >
+                          <Link href="/orders">ORDERS</Link>
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         className="w-full justify-start font-mono"
