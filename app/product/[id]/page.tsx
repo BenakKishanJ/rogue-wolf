@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import * as React from "react"; // Add for React.use()
@@ -22,6 +23,8 @@ import ProductCard from "@/components/shop/product-card";
 import { IProduct } from "../../../lib/models/products"; // Adjust path
 import connectToDatabase from "../../../lib/mongodb"; // Adjust path
 import Product from "../../../lib/models/products"; // Adjust path
+import { useToast } from "@/hooks/use-toast"; // Adjust path
+import { ToastAction } from "@/components/ui/toast"; // Adjust path
 
 interface ProductPageProps {
   product: IProduct | null;
@@ -34,12 +37,74 @@ export default function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params); // Unwrap params with React.use()
+  const { data: session } = useSession();
   const [product, setProduct] = useState<IProduct | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [selectedColor, setSelectedColor] = useState("black");
   const [selectedSize, setSelectedSize] = useState("m");
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { toast } = useToast();
+
+  const addToCart = async () => {
+    if (!session?.user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to add items to your cart.",
+        variant: "destructive",
+        action: (
+          <ToastAction altText="Sign In" asChild>
+            <Link href="/auth/signin">Sign In</Link>
+          </ToastAction>
+        ),
+      });
+      return;
+    }
+
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product not loaded yet. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          productId: id,
+          quantity,
+          color: selectedColor,
+          size: selectedSize,
+        }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Added to Cart",
+          description: `${product.name} has been added to your cart.`,
+          action: (
+            <ToastAction altText="View Cart" asChild>
+              <Link href="/cart">View Cart</Link>
+            </ToastAction>
+          ),
+        });
+      } else {
+        throw new Error("Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -80,6 +145,15 @@ export default function ProductPage({
     }
   };
 
+  // Handle image error by setting fallback image
+  const handleImageError = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>,
+    fallbackImage: string = "/TShirt.png",
+  ) => {
+    const target = event.target as HTMLImageElement;
+    target.src = fallbackImage;
+  };
+
   return (
     <div className="animate-fade-in pt-20">
       <div className="container py-8">
@@ -101,11 +175,12 @@ export default function ProductPage({
           <div className="space-y-4">
             <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
               <Image
-                src={productImages[activeImageIndex] || "/placeholder.svg"}
+                src={productImages[activeImageIndex] || "/TShirt.png"}
                 alt={product.name}
                 fill
                 className="object-cover"
                 priority
+                onError={(e) => handleImageError(e, "/TShirt.png")}
               />
 
               {product.discount > 0 && (
@@ -127,10 +202,11 @@ export default function ProductPage({
                   onClick={() => setActiveImageIndex(index)}
                 >
                   <Image
-                    src={image || "/placeholder.svg"}
+                    src={image || "/TShirt.png"}
                     alt={`${product.name} - Image ${index + 1}`}
                     fill
                     className="object-cover"
+                    onError={(e) => handleImageError(e, "/TShirt.png")}
                   />
                 </button>
               ))}
@@ -297,7 +373,10 @@ export default function ProductPage({
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button className="bg-accent hover:bg-accent/90 text-accent-foreground flex-1">
+              <Button
+                className="bg-accent hover:bg-accent/90 text-accent-foreground flex-1"
+                onClick={addToCart}
+              >
                 <ShoppingBag className="mr-2 h-5 w-5" />
                 Add to Cart
               </Button>

@@ -1,16 +1,82 @@
-// /components/shop/product-card.tsx
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IProduct } from "../../lib/models/products"; // Adjust path based on your structure
+import { useSession } from "next-auth/react";
+import { useToast } from "@/hooks/use-toast"; // Adjust path
+import { ToastAction } from "@/components/ui/toast"; // Adjust path
 
 interface ProductCardProps {
   product: IProduct;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { data: session, status } = useSession();
+  const { toast } = useToast();
+
+  const addToCart = async () => {
+    if (status === "loading") {
+      toast({
+        title: "Please Wait",
+        description: "Loading your session...",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!session?.user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to add items to your cart.",
+        variant: "destructive",
+        action: (
+          <ToastAction altText="Sign In" asChild>
+            <Link href="/auth/signin">Sign In</Link>
+          </ToastAction>
+        ),
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          productId: product._id.toString(),
+          quantity: 1,
+          color: product.colors[0] || "default",
+          size: product.sizes[0] || "M",
+        }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Added to Cart",
+          description: `${product.name} has been added to your cart.`,
+          action: (
+            <ToastAction altText="View Cart" asChild>
+              <Link href="/cart">View Cart</Link>
+            </ToastAction>
+          ),
+        });
+      } else {
+        throw new Error("Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart.",
+        variant: "destructive",
+      });
+    }
+  };
   return (
     <div className="group product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md">
       <div className="relative aspect-square overflow-hidden">
@@ -44,7 +110,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               VIEW
             </Link>
           </Button>
-          <Button size="sm" variant="secondary" className="font-mono">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="font-mono"
+            onClick={addToCart}
+          >
             <ShoppingBag className="h-4 w-4 mr-1" />
             ADD
           </Button>
