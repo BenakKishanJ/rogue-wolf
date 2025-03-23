@@ -4,7 +4,9 @@ import connectToDatabase from "../../../../lib/mongodb";
 import Transaction from "../../../../lib/models/transaction";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import bcrypt from "bcrypt";
+import * as bcrypt from "bcrypt"; // Use * import for TypeScript types
+
+export const dynamic = "force-dynamic"; // Prevent prerendering during build
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
