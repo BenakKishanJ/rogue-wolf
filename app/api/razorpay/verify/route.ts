@@ -19,8 +19,9 @@ export async function POST(request: Request) {
     userId,
     amount,
     cartItems,
+    deliveryDetails,
   } = await request.json();
-
+  console.log("Verify - Received deliveryDetails:", deliveryDetails);
   if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
     return NextResponse.json(
       { success: false, message: "Invalid payment data" },
@@ -43,8 +44,6 @@ export async function POST(request: Request) {
 
   try {
     await connectToDatabase();
-
-    // Store transaction
     const transaction = new Transaction({
       userId,
       paymentId: razorpay_payment_id,
@@ -59,19 +58,17 @@ export async function POST(request: Request) {
         size: item.size,
         price: item.product.price,
       })),
+      deliveryDetails, // Store the full object
       createdAt: new Date(),
     });
-    await transaction.save();
+    console.log(
+      "Verify - Saving transaction with deliveryDetails:",
+      deliveryDetails,
+    );
+    const savedTransaction = await transaction.save();
+    console.log("Verify - Saved transaction:", savedTransaction); // Log the saved document
 
-    // Clear cart after successful payment
-    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/cart`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-    // Clear cart
-    //    await Cart.updateOne({ userId }, { $set: { items: [] } });
-
+    await Cart.updateOne({ userId }, { $set: { items: [] } });
     return NextResponse.json(
       { success: true, message: "Payment verified and recorded" },
       { status: 200 },
