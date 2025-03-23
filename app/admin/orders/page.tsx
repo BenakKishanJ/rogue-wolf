@@ -1,4 +1,4 @@
-// app/orders/page.tsx
+// app/admin/orders/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface TransactionItem {
   productId: string;
@@ -30,33 +31,38 @@ interface DeliveryDetails {
 
 interface Transaction {
   _id: string;
+  userId: string;
   paymentId: string;
   orderId: string;
   amount: number;
   currency: string;
-  status: "completed" | "failed" | "pending"; // Updated to include "pending"
+  status: "completed" | "failed" | "pending";
   items: TransactionItem[];
-  deliveryDetails: DeliveryDetails; // Added delivery details
+  deliveryDetails: DeliveryDetails;
   createdAt: string;
 }
 
-export default function OrdersPage() {
+export default function AdminOrdersPage() {
   const { data: session, status } = useSession();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [password, setPassword] = useState("");
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && isAuthorized) {
       fetchTransactions();
     }
-  }, [status]);
+  }, [status, isAuthorized]);
 
   const fetchTransactions = async () => {
     try {
-      const res = await fetch("/api/orders");
+      const res = await fetch("/api/admin/orders", {
+        method: "GET",
+        headers: { "X-Admin-Password": password },
+      });
       const data = await res.json();
       if (res.ok) {
-        // Fetch product details for each item
         const enrichedTransactions = await Promise.all(
           data.map(async (transaction: Transaction) => {
             const itemsWithProducts = await Promise.all(
@@ -79,7 +85,36 @@ export default function OrdersPage() {
       console.error("Error fetching orders:", error);
       toast({
         title: "Error",
-        description: "Failed to load your orders.",
+        description: "Failed to load orders.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/admin/verify-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthorized(true);
+        toast({ title: "Success", description: "Access granted." });
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Invalid password.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Password verification error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to verify password.",
         variant: "destructive",
       });
     }
@@ -100,16 +135,37 @@ export default function OrdersPage() {
     );
   }
 
+  if (!isAuthorized) {
+    return (
+      <div className="container py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Admin Access Required</h1>
+        <form
+          onSubmit={handlePasswordSubmit}
+          className="max-w-sm mx-auto space-y-4"
+        >
+          <div>
+            <Label htmlFor="password">Enter Admin Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">
+            Submit
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-20">
-      <h1 className="text-2xl font-bold mb-8">Your Orders</h1>
+      <h1 className="text-2xl font-bold mb-8">All Orders</h1>
       {transactions.length === 0 ? (
-        <p>
-          No orders yet.{" "}
-          <Link href="/shop" className="text-accent">
-            Start Shopping
-          </Link>
-        </p>
+        <p>No orders placed yet.</p>
       ) : (
         <div className="space-y-8">
           {transactions.map((transaction) => (
@@ -122,13 +178,7 @@ export default function OrdersPage() {
                   Order #{transaction.orderId}
                 </h2>
                 <span
-                  className={`text-sm font-medium ${
-                    transaction.status === "completed"
-                      ? "text-green-600"
-                      : transaction.status === "pending"
-                        ? "text-yellow-600"
-                        : "text-red-600"
-                  }`}
+                  className={`text-sm font-medium ${transaction.status === "completed" ? "text-green-600" : "text-red-600"}`}
                 >
                   {transaction.status.toUpperCase()}
                 </span>
@@ -137,9 +187,37 @@ export default function OrdersPage() {
                 Placed on:{" "}
                 {new Date(transaction.createdAt).toLocaleDateString()}
               </p>
-
-              {/* Delivery Details Section */}
-              <div className="mb-4">
+              <p className="text-sm text-foreground/70 mb-2">
+                User ID: {transaction.userId}
+              </p>
+              <div className="space-y-4">
+                {transaction.items.map((item, index) => (
+                  <div key={index} className="flex items-center gap-4">
+                    <Image
+                      src={
+                        item.product?.designImage ||
+                        item.product?.images?.[0] ||
+                        "/placeholder.png"
+                      }
+                      alt={item.product?.name || "Product"}
+                      width={60}
+                      height={60}
+                      className="object-cover rounded-md"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium">{item.product?.name}</h3>
+                      <p className="text-sm text-foreground/70">
+                        Color: {item.color} | Size: {item.size} | Quantity:{" "}
+                        {item.quantity}
+                      </p>
+                      <p className="text-sm font-bold">
+                        ₹{(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
                 <h3 className="text-md font-semibold">Delivery Details</h3>
                 <p className="text-sm">
                   Name: {transaction.deliveryDetails.name}
@@ -168,37 +246,6 @@ export default function OrdersPage() {
                   </p>
                 )}
               </div>
-
-              {/* Items Section */}
-              <div className="space-y-4">
-                {transaction.items.map((item, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <Image
-                      src={
-                        item.product?.images?.[0] ||
-                        item.product?.designImage ||
-                        "/placeholder.png"
-                      }
-                      alt={item.product?.name || "Product"}
-                      width={60}
-                      height={60}
-                      className="object-cover rounded-md"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.product?.name}</h3>
-                      <p className="text-sm text-foreground/70">
-                        Color: {item.color} | Size: {item.size} | Quantity:{" "}
-                        {item.quantity}
-                      </p>
-                      <p className="text-sm font-bold">
-                        ₹{(item.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Total Section */}
               <div className="mt-4 flex justify-between items-center">
                 <p className="text-lg font-semibold">Total</p>
                 <p className="text-xl font-bold text-accent-foreground">
