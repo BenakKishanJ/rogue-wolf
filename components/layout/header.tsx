@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { Menu, Search, ShoppingBag, User } from "lucide-react";
+import { Menu, Search, ShoppingBag, User, BookCheck } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -106,7 +107,11 @@ export default function Header() {
                   asChild
                   className="hidden md:flex"
                 >
-                  <Link href="/orders">Orders</Link>
+                  <Link href="/orders">
+                    <BookCheck className="h-5 w-5" />
+
+                    <span className="sr-only">Orders</span>
+                  </Link>
                 </Button>
               )}
               <Button
