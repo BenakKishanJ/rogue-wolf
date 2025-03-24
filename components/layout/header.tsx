@@ -8,6 +8,7 @@ import { Menu, Search, ShoppingBag, User, BookCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui//theme-toggle";
 import Image from "next/image";
 
 export default function Header() {
@@ -27,7 +28,6 @@ export default function Header() {
   const navLinks = [
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
-    // { name: "COLLECTIONS", href: "/collections" },
     { name: "ABOUT", href: "/about" },
     { name: "CONTACT", href: "/contact" },
   ];
@@ -51,7 +51,12 @@ export default function Header() {
             height={40}
             className="mr-2"
           />
-          ROGUE WOLF
+          <Link
+            href="/"
+            className="text-3xl font-display font-black tracking-tight text-foreground"
+          >
+            ROGUE WOLF
+          </Link>
         </Link>
 
         {/* Desktop Navigation */}
@@ -70,6 +75,7 @@ export default function Header() {
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
+          <ThemeToggle />
           <Button variant="ghost" size="icon" className="hidden md:flex">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
@@ -147,7 +153,7 @@ export default function Header() {
                 <div className="flex items-center justify-between mb-8">
                   <Link
                     href="/"
-                    className="text-2xl font-mono font-bold tracking-tight text-black"
+                    className="text-2xl font-mono font-bold tracking-tight "
                   >
                     ROGUE WOLF
                   </Link>
@@ -163,12 +169,6 @@ export default function Header() {
                       {link.name}
                     </Link>
                   ))}
-                  <Link
-                    href="/cart"
-                    className="text-foreground text-lg font-mono font-bold"
-                  >
-                    CART
-                  </Link>
                 </nav>
 
                 <div className="mt-auto pt-8 flex flex-col space-y-4">

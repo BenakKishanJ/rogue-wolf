@@ -15,7 +15,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       <ThemeProvider
         attribute="class"
         defaultTheme="light"
-        enableSystem={false}
+        enableSystem={true}
         disableTransitionOnChange
       >
         <div className="flex min-h-screen flex-col">
