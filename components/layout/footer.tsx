@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="container py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="space-y-4">
-            <h4 className="text-2xl font-display font-black">PRISM</h4>
+            <h4 className="text-2xl font-display font-black">ROGUE WOLF</h4>
             <p className="text-muted-foreground text-sm">
               Revolutionizing fashion with cutting-edge 3D preview and virtual
               try-on technology.
