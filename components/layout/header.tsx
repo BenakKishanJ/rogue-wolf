@@ -51,12 +51,9 @@ export default function Header() {
             height={40}
             className="mr-2"
           />
-        </Link>
-        <Link
-          href="/"
-          className="text-3xl font-display font-black tracking-tight text-foreground"
-        >
-          ROGUE WOLF
+          <div className="text-3xl font-display font-black tracking-tight text-foreground">
+            ROGUE WOLF
+          </div>
         </Link>
 
         {/* Desktop Navigation */}

@@ -5,50 +5,70 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface LoadingScreenProps {
   isLoading: boolean;
-  progress?: number;
   onLoadingComplete?: () => void;
 }
 
 export function LoadingScreen({
   isLoading,
-  progress: externalProgress,
   onLoadingComplete,
 }: LoadingScreenProps) {
   const [showLoader, setShowLoader] = useState(isLoading);
-  const [progress, setProgress] = useState(0); // Internal progress state
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (!isLoading && showLoader) {
-      const timeout = setTimeout(() => {
-        setShowLoader(false);
-        setProgress(0); // Reset progress when hiding
-        onLoadingComplete?.();
-      }, 500);
-      return () => clearTimeout(timeout);
-    }
+    let progressInterval: NodeJS.Timeout;
+    let loadCompleteTimeout: NodeJS.Timeout;
 
-    if (isLoading && !showLoader) {
+    if (isLoading) {
+      // Reset to initial state
       setShowLoader(true);
-    }
-  }, [isLoading, showLoader, onLoadingComplete]);
+      setProgress(0);
 
-  // Animate progress bar to complete in 1 second
-  useEffect(() => {
-    if (isLoading && showLoader) {
-      setProgress(0); // Start at 0
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
+      // Gradually increase progress with a more natural curve
+      progressInterval = setInterval(() => {
+        setProgress((prevProgress) => {
+          // Create a more organic progress curve
+          if (prevProgress < 40) {
+            return prevProgress + 15; // Quick initial progress
+          } else if (prevProgress < 70) {
+            return prevProgress + 8; // Moderate progress
+          } else if (prevProgress < 90) {
+            return prevProgress + 4; // Slowing down
+          } else if (prevProgress < 98) {
+            return prevProgress + 1; // Crawling to 100%
+          } else {
+            clearInterval(progressInterval);
             return 100;
           }
-          return prev + 5; // Increment by 5% every 50ms to finish in 1 second
         });
-      }, 50); // 50ms interval (20 steps in 1 second)
+      }, 100);
 
-      return () => clearInterval(interval);
+      // Fallback to ensure loading completes
+      loadCompleteTimeout = setTimeout(() => {
+        setShowLoader(false);
+        setProgress(0);
+        onLoadingComplete?.();
+      }, 3000);
     }
-  }, [isLoading, showLoader]);
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+      if (loadCompleteTimeout) clearTimeout(loadCompleteTimeout);
+    };
+  }, [isLoading, onLoadingComplete]);
+
+  // Handle hiding the loader when loading is complete
+  useEffect(() => {
+    if (!isLoading && showLoader) {
+      const hideTimeout = setTimeout(() => {
+        setShowLoader(false);
+        setProgress(0);
+        onLoadingComplete?.();
+      }, 500);
+
+      return () => clearTimeout(hideTimeout);
+    }
+  }, [isLoading, showLoader, onLoadingComplete]);
 
   return (
     <AnimatePresence>
@@ -59,7 +79,7 @@ export function LoadingScreen({
           className="fixed inset-0 z-50 flex items-center justify-center bg-background"
         >
           <div className="flex flex-col items-center">
-            {/* Wolf claw design */}
+            {/* Wolf claw design forming RW */}
             <div className="relative h-40 w-40">
               {/* Background grid with subtle primary color */}
               <svg
@@ -84,43 +104,65 @@ export function LoadingScreen({
                 </defs>
                 <rect width="100" height="100" fill="url(#grid)" />
               </svg>
-
-              {/* Wolf claw marks */}
+              {/* RW Claw Marks */}
               <motion.svg
-                viewBox="0 0 100 100"
+                viewBox="0 0 180 120"
                 className="absolute inset-0 h-full w-full"
-                initial={{ opacity: 0.5, rotate: -10 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Number.POSITIVE_INFINITY,
-                  repeatType: "reverse",
-                }}
               >
-                {/* Claw marks (three sharp slashes) */}
-                <path
-                  d="M30 20 Q35 30 25 60 Q20 70 30 80"
+                {/* R Letter */}
+                <motion.path
+                  d="M10 100 
+        L10 20 
+        L50 20 
+        Q65 35, 65 50 
+        Q65 65, 50 75 
+        L10 75
+        L65 100"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="4"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="text-primary"
+                  initial={{
+                    pathLength: 0,
+                    strokeWidth: 2,
+                  }}
+                  animate={{
+                    pathLength: 1,
+                    strokeWidth: [2, 5, 3],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    ease: "easeInOut",
+                  }}
                 />
-                <path
-                  d="M50 15 Q55 25 45 65 Q40 75 50 85"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  className="text-primary"
-                />
-                <path
-                  d="M70 20 Q75 30 65 60 Q60 70 70 80"
+
+                {/* W Letter */}
+                <motion.path
+                  d="M90 20
+       L100 100
+       L120 50
+       L140 100
+       L150 20"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="4"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="text-primary"
+                  initial={{
+                    pathLength: 0,
+                    strokeWidth: 2,
+                  }}
+                  animate={{
+                    pathLength: 1,
+                    strokeWidth: [2, 5, 3],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    ease: "easeInOut",
+                  }}
                 />
               </motion.svg>
 
@@ -166,7 +208,10 @@ export function LoadingScreen({
                 className="h-full bg-primary"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.05 }} // Smooth transition for each step
+                transition={{
+                  duration: 0.1,
+                  ease: "linear",
+                }}
               />
             </div>
 
