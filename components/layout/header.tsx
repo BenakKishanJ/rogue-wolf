@@ -9,11 +9,12 @@ import { Menu, Search, ShoppingBag, User, BookCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ui/theme-toggle"; // Fixed path typo
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Added state for sheet
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -31,6 +32,11 @@ export default function Header() {
     { name: "ABOUT", href: "/about" },
     { name: "CONTACT", href: "/contact" },
   ];
+
+  // Function to close the menu
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header
@@ -78,13 +84,6 @@ export default function Header() {
             <span className="sr-only">Search</span>
           </Button>
 
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/cart">
-              <ShoppingBag className="h-5 w-5" />
-              <span className="sr-only">Cart</span>
-            </Link>
-          </Button>
-
           {status === "loading" ? (
             <Button variant="ghost" size="icon" disabled>
               <User className="h-5 w-5" />
@@ -116,6 +115,20 @@ export default function Header() {
                   </Link>
                 </Button>
               )}
+
+              {status === "authenticated" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className="hidden md:flex"
+                >
+                  <Link href="/cart">
+                    <ShoppingBag className="h-5 w-5" />
+                    <span className="sr-only">Cart</span>
+                  </Link>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -137,7 +150,7 @@ export default function Header() {
           )}
 
           {/* Mobile Menu */}
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
@@ -150,6 +163,7 @@ export default function Header() {
                   <Link
                     href="/"
                     className="text-2xl font-mono font-bold tracking-tight"
+                    onClick={closeMobileMenu}
                   >
                     ROGUE WOLF
                   </Link>
@@ -161,6 +175,7 @@ export default function Header() {
                       key={link.name}
                       href={link.href}
                       className="text-foreground text-lg font-mono font-bold hover:text-foreground/80"
+                      onClick={closeMobileMenu}
                     >
                       {link.name}
                     </Link>
@@ -174,17 +189,33 @@ export default function Header() {
                         variant="outline"
                         className="w-full justify-start font-mono text-lg"
                         asChild
+                        onClick={closeMobileMenu}
                       >
                         <Link href="/account">
                           <User className="h-5 w-5 mr-2" />
                           ACCOUNT
                         </Link>
                       </Button>
+
                       {status === "authenticated" && (
                         <Button
                           variant="outline"
                           className="w-full justify-start font-mono text-lg"
                           asChild
+                          onClick={closeMobileMenu}
+                        >
+                          <Link href="/cart">
+                            <ShoppingBag className="h-5 w-5 mr-2" />
+                            CART
+                          </Link>
+                        </Button>
+                      )}
+                      {status === "authenticated" && (
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start font-mono text-lg"
+                          asChild
+                          onClick={closeMobileMenu}
                         >
                           <Link href="/orders">
                             <BookCheck className="h-5 w-5 mr-2" />
@@ -195,7 +226,10 @@ export default function Header() {
                       <Button
                         variant="outline"
                         className="w-full justify-start font-mono text-lg"
-                        onClick={() => signOut({ callbackUrl: "/" })}
+                        onClick={() => {
+                          signOut({ callbackUrl: "/" });
+                          closeMobileMenu();
+                        }}
                       >
                         SIGN OUT
                       </Button>
@@ -204,7 +238,10 @@ export default function Header() {
                     <Button
                       variant="outline"
                       className="w-full justify-start font-mono text-lg"
-                      onClick={() => signIn("google", { callbackUrl: "/" })}
+                      onClick={() => {
+                        signIn("google", { callbackUrl: "/" });
+                        closeMobileMenu();
+                      }}
                     >
                       SIGN IN
                     </Button>
@@ -212,6 +249,7 @@ export default function Header() {
                   <Button
                     variant="outline"
                     className="w-full justify-start font-mono text-lg"
+                    onClick={closeMobileMenu}
                   >
                     <Search className="h-5 w-5 mr-2" />
                     SEARCH
