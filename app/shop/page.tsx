@@ -1,4 +1,5 @@
 // app/shop/page.tsx
+
 import Link from "next/link";
 import { ChevronRight, Filter, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -91,10 +92,11 @@ export default async function ShopPage() {
                   <RadioGroup defaultValue="all">
                     {[
                       { id: "all", label: "All Prices" },
-                      { id: "under-25", label: "Under $25" },
-                      { id: "25-50", label: "$25 to $50" },
-                      { id: "50-100", label: "$50 to $100" },
-                      { id: "over-100", label: "Over $100" },
+                      { id: "0-500", label: "₹0 - ₹500" },
+                      { id: "500-1000", label: "₹500 - ₹1000" },
+                      { id: "1000-1500", label: "₹1000 - ₹1500" },
+                      { id: "1500-2000", label: "₹1500 - ₹2000" },
+                      { id: "2000-", label: "₹2000+" },
                     ].map((price) => (
                       <div
                         key={price.id}
@@ -111,7 +113,7 @@ export default async function ShopPage() {
                           {price.label}
                         </Label>
                       </div>
-                    ))}
+                    ))}{" "}
                   </RadioGroup>
                 </div>
 
