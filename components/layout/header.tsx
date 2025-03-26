@@ -55,13 +55,13 @@ export default function Header() {
             alt="Rogue Wolf Logo"
             width={40}
             height={40}
-            className="mr-2"
+            className=" mr-2"
           />
-          <div className="text-3xl font-display font-black tracking-tight text-foreground">
-            ROGUE WOLF
+          <div className="text-2xl sm:text-3xl font-display font-black tracking-tight text-foreground">
+            <span className="block md:hidden">RW</span>
+            <span className="hidden md:block">ROGUE WOLF</span>
           </div>
         </Link>
-
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
