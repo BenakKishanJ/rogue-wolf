@@ -1,3 +1,4 @@
+// components/layout/header.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,12 +9,11 @@ import { Menu, Search, ShoppingBag, User, BookCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ui//theme-toggle";
+import { ThemeToggle } from "@/components/ui/theme-toggle"; // Fixed path typo
 import Image from "next/image";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function Header() {
               className="text-foreground/80 hover:text-foreground relative group text-base font-mono font-bold"
             >
               {link.name}
-              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-flame transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-flame transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
@@ -106,13 +106,12 @@ export default function Header() {
               {status === "authenticated" && (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   asChild
                   className="hidden md:flex"
                 >
                   <Link href="/orders">
                     <BookCheck className="h-5 w-5" />
-
                     <span className="sr-only">Orders</span>
                   </Link>
                 </Button>
@@ -140,17 +139,17 @@ export default function Header() {
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="outline" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-80 bg-background">
+            <SheetContent side="right" title="Menu" visuallyHiddenTitle={true}>
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between mb-8">
                   <Link
                     href="/"
-                    className="text-2xl font-mono font-bold tracking-tight "
+                    className="text-2xl font-mono font-bold tracking-tight"
                   >
                     ROGUE WOLF
                   </Link>
@@ -161,7 +160,7 @@ export default function Header() {
                     <Link
                       key={link.name}
                       href={link.href}
-                      className="text-foreground text-lg font-mono font-bold"
+                      className="text-foreground text-lg font-mono font-bold hover:text-foreground/80"
                     >
                       {link.name}
                     </Link>
@@ -173,7 +172,7 @@ export default function Header() {
                     <>
                       <Button
                         variant="outline"
-                        className="w-full justify-start font-mono"
+                        className="w-full justify-start font-mono text-lg"
                         asChild
                       >
                         <Link href="/account">
@@ -181,18 +180,21 @@ export default function Header() {
                           ACCOUNT
                         </Link>
                       </Button>
-                      {session && (
+                      {status === "authenticated" && (
                         <Button
                           variant="outline"
-                          className="w-full justify-start font-mono"
+                          className="w-full justify-start font-mono text-lg"
                           asChild
                         >
-                          <Link href="/orders">ORDERS</Link>
+                          <Link href="/orders">
+                            <BookCheck className="h-5 w-5 mr-2" />
+                            ORDERS
+                          </Link>
                         </Button>
                       )}
                       <Button
                         variant="outline"
-                        className="w-full justify-start font-mono"
+                        className="w-full justify-start font-mono text-lg"
                         onClick={() => signOut({ callbackUrl: "/" })}
                       >
                         SIGN OUT
@@ -201,7 +203,7 @@ export default function Header() {
                   ) : (
                     <Button
                       variant="outline"
-                      className="w-full justify-start font-mono"
+                      className="w-full justify-start font-mono text-lg"
                       onClick={() => signIn("google", { callbackUrl: "/" })}
                     >
                       SIGN IN
@@ -209,7 +211,7 @@ export default function Header() {
                   )}
                   <Button
                     variant="outline"
-                    className="w-full justify-start font-mono"
+                    className="w-full justify-start font-mono text-lg"
                   >
                     <Search className="h-5 w-5 mr-2" />
                     SEARCH

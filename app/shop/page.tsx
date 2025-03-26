@@ -1,5 +1,4 @@
 // app/shop/page.tsx
-
 import Link from "next/link";
 import { ChevronRight, Filter, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -219,6 +218,7 @@ export default async function ShopPage() {
                   <SheetContent
                     side="left"
                     className="w-full sm:max-w-md overflow-auto"
+                    title="Filter Options"
                   >
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-xl font-bold">Filters</h2>
