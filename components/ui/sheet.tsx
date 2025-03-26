@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import * as SheetPrimitive from "@radix-ui/react-dialog"; // Changed to @radix-ui/react-dialog for consistency
+import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
@@ -50,14 +50,14 @@ const sheetVariants = cva(
   },
 );
 
-interface SheetContentProps
-  extends Omit<
-      React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-      "title"
-    >,
-    VariantProps<typeof sheetVariants> {
-  title?: string; // Optional title prop
-  visuallyHiddenTitle?: boolean; // Option to hide title visually
+// Explicitly define SheetContentProps without extending, then merge with VariantProps
+interface SheetContentProps extends VariantProps<typeof sheetVariants> {
+  side?: "top" | "bottom" | "left" | "right";
+  className?: string;
+  children?: React.ReactNode;
+  title?: string;
+  visuallyHiddenTitle?: boolean;
+  [key: string]: any; // Allow additional props for flexibility
 }
 
 const SheetContent = React.forwardRef<
@@ -78,6 +78,8 @@ const SheetContent = React.forwardRef<
     // Filter out custom props to avoid passing them to SheetPrimitive.Content
     const filteredProps = { ...props };
     delete filteredProps.visuallyHiddenTitle;
+    delete filteredProps.title;
+    delete filteredProps.side; // Also filter out side since it's handled by sheetVariants
 
     return (
       <SheetPortal>
