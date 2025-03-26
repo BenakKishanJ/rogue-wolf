@@ -1,7 +1,8 @@
 // components/ClientLayout.tsx
 "use client";
+
 import type React from "react";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { useState, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import "@/styles/globals.css";
@@ -12,21 +13,30 @@ import Footer from "@/components/layout/footer";
 import { Toaster } from "@/components/ui/toaster";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 
-export default function ClientLayout({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
+// Component to handle route changes with useSearchParams
+function RouteTracker({
+  onRouteChange,
+}: {
+  onRouteChange: (isLoading: boolean) => void;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Show loading screen on route change or initial load
-    setIsLoading(true);
+    onRouteChange(true); // Start loading
 
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500); // Increased to 1.5 seconds for more reliable loading
+      onRouteChange(false); // End loading
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, onRouteChange]);
+
+  return null; // This component doesn’t render anything
+}
+
+export default function ClientLayout({ children }: { children: ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
@@ -45,6 +55,9 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
             isLoading={isLoading}
             onLoadingComplete={handleLoadingComplete}
           />
+          <Suspense fallback={<div>Loading...</div>}>
+            <RouteTracker onRouteChange={setIsLoading} />
+          </Suspense>
           <Header />
           <main className="flex-1">{children}</main>
           <Toaster />
