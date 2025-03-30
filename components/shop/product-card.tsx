@@ -176,14 +176,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                 transition={{ delay: 0.1 }}
               >
                 <Button
-                  asChild
                   size="sm"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-mono"
                 >
-                  <Link href={`/product/${product._id.toString()}`}>
-                    <Eye className="h-4 w-4 mr-1" />
-                    VIEW
-                  </Link>
+                  <Eye className="h-4 w-4 mr-1" />
+                  VIEW
                 </Button>
               </motion.div>
               <motion.div
