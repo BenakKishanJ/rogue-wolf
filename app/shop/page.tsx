@@ -31,7 +31,7 @@ export default function ShopPage() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3; // Adjust this number as needed
+  const itemsPerPage = 6; // Adjust this number as needed
 
   // Filter states
   const [categories, setCategories] = useState<string[]>([]);
