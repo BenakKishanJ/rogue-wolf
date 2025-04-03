@@ -21,7 +21,7 @@ const products: IProductData[] = [
     colors: ["black", "white", "grey"],
     sizes: ["s", "m", "l", "xl"],
     isNew: true,
-    category: "rougue-essentials",
+    category: "rogue essentials",
   },
   {
     name: "LONE_ALPHA",
@@ -40,7 +40,7 @@ const products: IProductData[] = [
     colors: ["black", "white", "red"],
     sizes: ["xs", "s", "m", "l", "xl"],
     isNew: true,
-    category: "rougue-essentials",
+    category: "rogue essentials",
   },
   {
     name: "SAVAGE_INSTICT",
@@ -59,7 +59,7 @@ const products: IProductData[] = [
     colors: ["black", "grey", "blue"],
     sizes: ["s", "m", "l", "xl"],
     isNew: true,
-    category: "rougue-essentials",
+    category: "rogue essentials",
   },
   {
     name: "THE_MIGHTY_BEAST",
@@ -78,7 +78,7 @@ const products: IProductData[] = [
     colors: ["black", "grey", "blue"],
     sizes: ["s", "m", "l", "xl"],
     isNew: true,
-    category: "rougue-essentials",
+    category: "rogue essentials",
   },
   {
     name: "VINTAGE_APPAREL",
@@ -97,7 +97,7 @@ const products: IProductData[] = [
     colors: ["black", "white", "beige"],
     sizes: ["xs", "s", "m", "l", "xl"],
     isNew: false,
-    category: "vintage-collection",
+    category: "vintage collection",
   },
   {
     name: "THE_ORIGINALS",
@@ -116,7 +116,7 @@ const products: IProductData[] = [
     colors: ["black", "white", "navy"],
     sizes: ["s", "m", "l", "xl"],
     isNew: false,
-    category: "rogue-originals",
+    category: "rogue originals",
   },
 ];
 

@@ -194,14 +194,7 @@ export default function ShopPage() {
   };
 
   // Categories list
-  const categoryOptions = [
-    "Classic",
-    "Graphic",
-    "Vintage",
-    "Premium",
-    "Slim Fit",
-    "Oversized",
-  ];
+  const categoryOptions = ["Rogue Essentials", "Rogue Originals", "Vintage"];
 
   // Price range options
   const priceOptions = [
