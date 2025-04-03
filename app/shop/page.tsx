@@ -1,6 +1,7 @@
 // app/shop/page.tsx
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Filter, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,10 @@ export default function ShopPage() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [rating, setRating] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("featured");
+  // Search state
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
+  const router = useRouter();
 
   // Mobile state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -70,6 +75,14 @@ export default function ShopPage() {
   useEffect(() => {
     let result = [...products];
     let filterCount = 0;
+
+    // Apply search filter if there's a search query
+    if (searchQuery) {
+      result = result.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+      filterCount += 1;
+    }
 
     // Apply category filter
     if (categories.length > 0) {
@@ -149,6 +162,7 @@ export default function ShopPage() {
     selectedSizes,
     rating,
     sortBy,
+    searchQuery,
   ]);
 
   // Calculate pagination
@@ -157,7 +171,7 @@ export default function ShopPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // Reset all filters
+  // Reset all filters including search
   const resetFilters = () => {
     setCategories([]);
     setPriceRange("all");
@@ -166,6 +180,11 @@ export default function ShopPage() {
     setRating("all");
     setSortBy("featured");
     setCurrentPage(1);
+
+    // Clear search query from URL
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("search");
+    router.replace(`/shop?${params.toString()}`);
   };
 
   // Toggle category selection
@@ -352,20 +371,42 @@ export default function ShopPage() {
     <div className="animate-fade-in pt-16 md:pt-20">
       <div className="container py-4 md:py-8">
         {/* Breadcrumb */}
+
         <div className="flex items-center text-sm text-foreground/60 mb-4 md:mb-8">
           <Link href="/" className="hover:text-foreground">
             Home
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
           <span className="text-foreground">Shop</span>
+          {searchQuery && (
+            <>
+              <ChevronRight className="h-4 w-4 mx-2" />
+              <span className="text-foreground/60">
+                Search: "{searchQuery}"
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-2 p-0 h-auto text-sm"
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("search");
+                  router.replace(`/shop?${params.toString()}`);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Active filters indicators (mobile only) */}
-        {activeFilters > 0 && (
+        {(activeFilters > 0 || searchQuery) && (
           <div className="flex items-center justify-between mb-4 md:hidden">
             <div className="text-sm text-foreground/70">
               <span className="font-medium">
-                {activeFilters} filter{activeFilters !== 1 ? "s" : ""} applied
+                {activeFilters + (searchQuery ? 1 : 0)} filter
+                {activeFilters + (searchQuery ? 1 : 0) !== 1 ? "s" : ""} applied
               </span>
             </div>
             <Button
@@ -384,18 +425,19 @@ export default function ShopPage() {
             <div className="sticky top-24">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">Filters</h2>
-                <Button
-                  variant="link"
-                  className="text-accent p-0 h-auto text-sm"
-                  onClick={resetFilters}
-                >
-                  Reset All
-                </Button>
+                {(activeFilters > 0 || searchQuery) && (
+                  <Button
+                    variant="link"
+                    className="text-accent p-0 h-auto text-sm"
+                    onClick={resetFilters}
+                  >
+                    Reset All
+                  </Button>
+                )}
               </div>
               <FilterSection />
             </div>
           </div>
-
           {/* Main Content */}
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
