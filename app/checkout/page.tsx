@@ -1,3 +1,4 @@
+// app/checkout/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,18 +44,38 @@ export default function CheckoutPage() {
     pincode: "",
     phone: "",
     alternatePhone: "",
-    email: session?.user?.email || "",
+    email: "",
     deliveryNote: "",
   });
   const { toast } = useToast();
 
+  // Fetch full user profile from API
+  const fetchUserProfile = async () => {
+    try {
+      const res = await fetch("/api/user/profile");
+      if (res.ok) {
+        const userData = await res.json();
+        console.log("Fetched user profile for checkout:", userData); // Debug
+        setDeliveryDetails((prev) => ({
+          ...prev,
+          name: userData.name || "",
+          address: userData.address || "",
+          pincode: userData.pincode || "",
+          phone: userData.phone || "",
+          email: userData.email || "",
+        }));
+      } else {
+        console.error("Failed to fetch user profile:", await res.json());
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
+
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && session?.user) {
       fetchCart();
-      setDeliveryDetails((prev) => ({
-        ...prev,
-        email: session?.user?.email || "",
-      }));
+      fetchUserProfile(); // Fetch profile directly from DB
     }
   }, [status, session]);
 
@@ -151,8 +172,30 @@ export default function CheckoutPage() {
     if (!validateForm()) return;
 
     try {
+      // Save updated address, pincode, phone to user profile if changed
+      const res = await fetch("/api/user/profile");
+      if (res.ok) {
+        const savedProfile = await res.json();
+        if (
+          deliveryDetails.address !== savedProfile.address ||
+          deliveryDetails.pincode !== savedProfile.pincode ||
+          deliveryDetails.phone !== savedProfile.phone
+        ) {
+          await fetch("/api/user", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: session.user.id,
+              address: deliveryDetails.address,
+              pincode: deliveryDetails.pincode,
+              phone: deliveryDetails.phone,
+            }),
+          });
+        }
+      }
+
       const totalAmount = calculateTotal();
-      const res = await fetch("/api/razorpay/order", {
+      const orderRes = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,8 +205,8 @@ export default function CheckoutPage() {
         }),
       });
 
-      const order = await res.json();
-      if (!res.ok) throw new Error(order.error || "Order creation failed");
+      const order = await orderRes.json();
+      if (!orderRes.ok) throw new Error(order.error || "Order creation failed");
       if (!order.id) throw new Error("Order creation failed - no ID returned");
 
       if (!window.Razorpay)
