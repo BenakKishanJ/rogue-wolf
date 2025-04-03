@@ -1,8 +1,15 @@
 // app/shop/page.tsx
+"use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Filter, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, Filter, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -15,31 +22,370 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ProductCard from "@/components/shop/product-card";
-import { IProduct } from "../../lib/models/products"; // Adjust path based on structure
+import { IProduct } from "../../lib/models/products";
 
-async function fetchProducts(): Promise<IProduct[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error("Failed to fetch products");
-  return res.json();
-}
+export default function ShopPage() {
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function ShopPage() {
-  const products = await fetchProducts();
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3; // Adjust this number as needed
+
+  // Filter states
+  const [categories, setCategories] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<string>("all");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [rating, setRating] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("featured");
+
+  // Mobile state
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<number>(0);
+
+  // Fetch products
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products`,
+        );
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
+        setProducts(data);
+        setFilteredProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  // Apply filters and reset to page 1 when filters change
+  useEffect(() => {
+    let result = [...products];
+    let filterCount = 0;
+
+    // Apply category filter
+    if (categories.length > 0) {
+      result = result.filter((product) =>
+        categories.some((cat) =>
+          product.category?.toLowerCase().includes(cat.toLowerCase()),
+        ),
+      );
+      filterCount += 1;
+    }
+
+    // Apply price filter
+    if (priceRange !== "all") {
+      const [min, max] = priceRange.split("-").map((p) => parseInt(p || "0"));
+      result = result.filter((product) => {
+        if (!max) return product.price >= min;
+        return product.price >= min && product.price <= max;
+      });
+      filterCount += 1;
+    }
+
+    // Apply color filter
+    if (selectedColors.length > 0) {
+      result = result.filter((product) =>
+        product.colors.some((color) => selectedColors.includes(color)),
+      );
+      filterCount += 1;
+    }
+
+    // Apply size filter
+    if (selectedSizes.length > 0) {
+      result = result.filter((product) =>
+        product.sizes?.some((size) =>
+          selectedSizes.includes(size.toLowerCase()),
+        ),
+      );
+      filterCount += 1;
+    }
+
+    // Apply rating filter
+    if (rating !== "all") {
+      const minRating = parseInt(rating.split("-")[0]);
+      result = result.filter((product) => product.rating >= minRating);
+      filterCount += 1;
+    }
+
+    // Apply sort
+    switch (sortBy) {
+      case "newest":
+        result.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+          const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      case "price-low":
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case "price-high":
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case "rating":
+        result.sort((a, b) => b.rating - a.rating);
+        break;
+      default:
+        break;
+    }
+
+    setFilteredProducts(result);
+    setActiveFilters(filterCount);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [
+    products,
+    categories,
+    priceRange,
+    selectedColors,
+    selectedSizes,
+    rating,
+    sortBy,
+  ]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset all filters
+  const resetFilters = () => {
+    setCategories([]);
+    setPriceRange("all");
+    setSelectedColors([]);
+    setSelectedSizes([]);
+    setRating("all");
+    setSortBy("featured");
+    setCurrentPage(1);
+  };
+
+  // Toggle category selection
+  const toggleCategory = (category: string) => {
+    setCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category],
+    );
+  };
+
+  // Toggle color selection
+  const toggleColor = (color: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color],
+    );
+  };
+
+  // Toggle size selection
+  const toggleSize = (size: string) => {
+    setSelectedSizes((prev) =>
+      prev.includes(size.toLowerCase())
+        ? prev.filter((s) => s !== size.toLowerCase())
+        : [...prev, size.toLowerCase()],
+    );
+  };
+
+  // Categories list
+  const categoryOptions = [
+    "Classic",
+    "Graphic",
+    "Vintage",
+    "Premium",
+    "Slim Fit",
+    "Oversized",
+  ];
+
+  // Price range options
+  const priceOptions = [
+    { id: "all", label: "All Prices" },
+    { id: "0-500", label: "₹0 - ₹500" },
+    { id: "500-1000", label: "₹500 - ₹1000" },
+    { id: "1000-1500", label: "₹1000 - ₹1500" },
+    { id: "1500-2000", label: "₹1500 - ₹2000" },
+    { id: "2000-", label: "₹2000+" },
+  ];
+
+  // Color options
+  const colorOptions = [
+    { id: "black", color: "bg-black" },
+    { id: "white", color: "bg-white border border-border" },
+    { id: "blue", color: "bg-blue-500" },
+    { id: "red", color: "bg-red-500" },
+    { id: "green", color: "bg-green-500" },
+  ];
+
+  // Size options
+  const sizeOptions = ["XS", "S", "M", "L", "XL"];
+
+  // Rating options
+  const ratingOptions = [
+    { id: "all", label: "All Ratings" },
+    { id: "4-up", label: "4 Stars & Up" },
+    { id: "3-up", label: "3 Stars & Up" },
+    { id: "2-up", label: "2 Stars & Up" },
+    { id: "1-up", label: "1 Star & Up" },
+  ];
+
+  // Filter section component
+  const FilterSection = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className="space-y-6">
+      {/* Categories */}
+      <div>
+        <h3 className="font-medium mb-3">Categories</h3>
+        <div className="space-y-2">
+          {categoryOptions.map((category) => (
+            <div key={category} className="flex items-center space-x-2">
+              <Checkbox
+                id={`${isMobile ? "mobile-" : ""}category-${category.toLowerCase()}`}
+                checked={categories.includes(category)}
+                onCheckedChange={() => toggleCategory(category)}
+              />
+              <Label
+                htmlFor={`${isMobile ? "mobile-" : ""}category-${category.toLowerCase()}`}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {category}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Price Range */}
+      <div>
+        <h3 className="font-medium mb-3">Price Range</h3>
+        <RadioGroup value={priceRange} onValueChange={setPriceRange}>
+          {priceOptions.map((price) => (
+            <div key={price.id} className="flex items-center space-x-2">
+              <RadioGroupItem
+                value={price.id}
+                id={`${isMobile ? "mobile-" : ""}price-${price.id}`}
+              />
+              <Label
+                htmlFor={`${isMobile ? "mobile-" : ""}price-${price.id}`}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {price.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
+
+      <Separator />
+
+      {/* Colors */}
+      <div>
+        <h3 className="font-medium mb-3">Colors</h3>
+        <div className="flex flex-wrap gap-2">
+          {colorOptions.map((color) => (
+            <div key={color.id} className="flex items-center">
+              <Checkbox
+                id={`${isMobile ? "mobile-" : ""}color-${color.id}`}
+                checked={selectedColors.includes(color.id)}
+                onCheckedChange={() => toggleColor(color.id)}
+                className="peer sr-only"
+              />
+              <Label
+                htmlFor={`${isMobile ? "mobile-" : ""}color-${color.id}`}
+                className={`h-8 w-8 rounded-full ${color.color} cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Sizes */}
+      <div>
+        <h3 className="font-medium mb-3">Sizes</h3>
+        <div className="flex flex-wrap gap-2">
+          {sizeOptions.map((size) => (
+            <div key={size} className="flex items-center">
+              <Checkbox
+                id={`${isMobile ? "mobile-" : ""}size-${size.toLowerCase()}`}
+                checked={selectedSizes.includes(size.toLowerCase())}
+                onCheckedChange={() => toggleSize(size)}
+                className="peer sr-only"
+              />
+              <Label
+                htmlFor={`${isMobile ? "mobile-" : ""}size-${size.toLowerCase()}`}
+                className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background text-sm font-medium ring-offset-background transition-all hover:bg-accent/10 ${selectedSizes.includes(size.toLowerCase()) ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                {size}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Ratings */}
+      <div>
+        <h3 className="font-medium mb-3">Ratings</h3>
+        <RadioGroup value={rating} onValueChange={setRating}>
+          {ratingOptions.map((ratingOpt) => (
+            <div key={ratingOpt.id} className="flex items-center space-x-2">
+              <RadioGroupItem
+                value={ratingOpt.id}
+                id={`${isMobile ? "mobile-" : ""}rating-${ratingOpt.id}`}
+              />
+              <Label
+                htmlFor={`${isMobile ? "mobile-" : ""}rating-${ratingOpt.id}`}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {ratingOpt.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="animate-fade-in pt-20">
-      <div className="container py-8">
+    <div className="animate-fade-in pt-16 md:pt-20">
+      <div className="container py-4 md:py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center text-sm text-primary-foreground/60 mb-8">
-          <Link href="/" className="hover:text-primary-foreground">
+        <div className="flex items-center text-sm text-foreground/60 mb-4 md:mb-8">
+          <Link href="/" className="hover:text-foreground">
             Home
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <span className="text-primary-foreground">Shop</span>
+          <span className="text-foreground">Shop</span>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8">
+        {/* Active filters indicators (mobile only) */}
+        {activeFilters > 0 && (
+          <div className="flex items-center justify-between mb-4 md:hidden">
+            <div className="text-sm text-foreground/70">
+              <span className="font-medium">
+                {activeFilters} filter{activeFilters !== 1 ? "s" : ""} applied
+              </span>
+            </div>
+            <Button
+              variant="link"
+              className="text-accent p-0 h-auto text-sm"
+              onClick={resetFilters}
+            >
+              Clear all
+            </Button>
+          </div>
+        )}
+
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
           {/* Filters - Desktop */}
           <div className="hidden md:block w-64 flex-shrink-0">
             <div className="sticky top-24">
@@ -48,345 +394,88 @@ export default async function ShopPage() {
                 <Button
                   variant="link"
                   className="text-accent p-0 h-auto text-sm"
+                  onClick={resetFilters}
                 >
                   Reset All
                 </Button>
               </div>
-
-              <div className="space-y-6">
-                {/* Categories */}
-                <div>
-                  <h3 className="font-medium mb-3">Categories</h3>
-                  <div className="space-y-2">
-                    {[
-                      "All",
-                      "Classic",
-                      "Graphic",
-                      "Vintage",
-                      "Premium",
-                      "Slim Fit",
-                      "Oversized",
-                    ].map((category) => (
-                      <div
-                        key={category}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox id={`category-${category.toLowerCase()}`} />
-                        <Label
-                          htmlFor={`category-${category.toLowerCase()}`}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {category}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Price Range */}
-                <div>
-                  <h3 className="font-medium mb-3">Price Range</h3>
-                  <RadioGroup defaultValue="all">
-                    {[
-                      { id: "all", label: "All Prices" },
-                      { id: "0-500", label: "₹0 - ₹500" },
-                      { id: "500-1000", label: "₹500 - ₹1000" },
-                      { id: "1000-1500", label: "₹1000 - ₹1500" },
-                      { id: "1500-2000", label: "₹1500 - ₹2000" },
-                      { id: "2000-", label: "₹2000+" },
-                    ].map((price) => (
-                      <div
-                        key={price.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <RadioGroupItem
-                          value={price.id}
-                          id={`price-${price.id}`}
-                        />
-                        <Label
-                          htmlFor={`price-${price.id}`}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {price.label}
-                        </Label>
-                      </div>
-                    ))}{" "}
-                  </RadioGroup>
-                </div>
-
-                <Separator />
-
-                {/* Colors */}
-                <div>
-                  <h3 className="font-medium mb-3">Colors</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { id: "black", color: "bg-black" },
-                      { id: "white", color: "bg-white border border-border" },
-                      { id: "blue", color: "bg-blue-500" },
-                      { id: "red", color: "bg-red-500" },
-                      { id: "green", color: "bg-green-500" },
-                    ].map((color) => (
-                      <div key={color.id} className="flex items-center">
-                        <Checkbox
-                          id={`color-${color.id}`}
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor={`color-${color.id}`}
-                          className={`h-8 w-8 rounded-full ${color.color} cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Sizes */}
-                <div>
-                  <h3 className="font-medium mb-3">Sizes</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {["XS", "S", "M", "L", "XL"].map((size) => (
-                      <div key={size} className="flex items-center">
-                        <Checkbox
-                          id={`size-${size.toLowerCase()}`}
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor={`size-${size.toLowerCase()}`}
-                          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-secondary text-sm font-medium ring-offset-background transition-all hover:bg-accent/10 peer-data-[state=checked]:bg-accent peer-data-[state=checked]:text-accent-foreground"
-                        >
-                          {size}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Ratings */}
-                <div>
-                  <h3 className="font-medium mb-3">Ratings</h3>
-                  <RadioGroup defaultValue="all">
-                    {[
-                      { id: "all", label: "All Ratings" },
-                      { id: "4-up", label: "4 Stars & Up" },
-                      { id: "3-up", label: "3 Stars & Up" },
-                      { id: "2-up", label: "2 Stars & Up" },
-                      { id: "1-up", label: "1 Star & Up" },
-                    ].map((rating) => (
-                      <div
-                        key={rating.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <RadioGroupItem
-                          value={rating.id}
-                          id={`rating-${rating.id}`}
-                        />
-                        <Label
-                          htmlFor={`rating-${rating.id}`}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {rating.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-              </div>
+              <FilterSection />
             </div>
           </div>
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <h1 className="text-3xl font-bold">All Products</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h1 className="text-2xl md:text-3xl font-bold">
+                All Products
+                {filteredProducts.length > 0 && (
+                  <span className="text-foreground/60 text-lg ml-2">
+                    ({filteredProducts.length})
+                  </span>
+                )}
+              </h1>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {/* Mobile Filter Button */}
-                <Sheet>
+                <Sheet
+                  open={isMobileFilterOpen}
+                  onOpenChange={setIsMobileFilterOpen}
+                >
                   <SheetTrigger asChild>
-                    <Button variant="outline" className="md:hidden">
+                    <Button
+                      variant="outline"
+                      className="md:hidden relative"
+                      onClick={() => setIsMobileFilterOpen(true)}
+                    >
                       <Filter className="h-4 w-4 mr-2" />
                       Filters
+                      {activeFilters > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground h-5 w-5 rounded-full text-xs flex items-center justify-center">
+                          {activeFilters}
+                        </span>
+                      )}
                     </Button>
                   </SheetTrigger>
                   <SheetContent
                     side="left"
-                    className="w-full sm:max-w-md overflow-auto"
-                    title="Filter Options"
+                    className="w-full sm:max-w-md overflow-auto p-6"
                   >
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-xl font-bold">Filters</h2>
-                      <Button
-                        variant="link"
-                        className="text-accent p-0 h-auto text-sm"
-                      >
-                        Reset All
-                      </Button>
+                      <div className="flex gap-4 items-center">
+                        <Button
+                          variant="link"
+                          className="text-accent p-0 h-auto text-sm"
+                          onClick={resetFilters}
+                        >
+                          Reset All
+                        </Button>
+                        <SheetClose asChild>
+                          <Button size="icon" variant="ghost">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </SheetClose>
+                      </div>
                     </div>
-
-                    <div className="space-y-6">
-                      {/* Categories */}
-                      <div>
-                        <h3 className="font-medium mb-3">Categories</h3>
-                        <div className="space-y-2">
-                          {[
-                            "All",
-                            "Classic",
-                            "Graphic",
-                            "Vintage",
-                            "Premium",
-                            "Slim Fit",
-                            "Oversized",
-                          ].map((category) => (
-                            <div
-                              key={category}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`mobile-category-${category.toLowerCase()}`}
-                              />
-                              <Label
-                                htmlFor={`mobile-category-${category.toLowerCase()}`}
-                                className="text-sm font-normal cursor-pointer"
-                              >
-                                {category}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Price Range */}
-                      <div>
-                        <h3 className="font-medium mb-3">Price Range</h3>
-                        <RadioGroup defaultValue="all">
-                          {[
-                            { id: "all", label: "All Prices" },
-                            { id: "under-25", label: "Under $25" },
-                            { id: "25-50", label: "$25 to $50" },
-                            { id: "50-100", label: "$50 to $100" },
-                            { id: "over-100", label: "Over $100" },
-                          ].map((price) => (
-                            <div
-                              key={price.id}
-                              className="flex items-center space-x-2"
-                            >
-                              <RadioGroupItem
-                                value={price.id}
-                                id={`mobile-price-${price.id}`}
-                              />
-                              <Label
-                                htmlFor={`mobile-price-${price.id}`}
-                                className="text-sm font-normal cursor-pointer"
-                              >
-                                {price.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
-
-                      <Separator />
-
-                      {/* Colors */}
-                      <div>
-                        <h3 className="font-medium mb-3">Colors</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {[
-                            { id: "black", color: "bg-black" },
-                            {
-                              id: "white",
-                              color: "bg-white border border-border",
-                            },
-                            { id: "blue", color: "bg-blue-500" },
-                            { id: "red", color: "bg-red-500" },
-                            { id: "green", color: "bg-green-500" },
-                          ].map((color) => (
-                            <div key={color.id} className="flex items-center">
-                              <Checkbox
-                                id={`mobile-color-${color.id}`}
-                                className="peer sr-only"
-                              />
-                              <Label
-                                htmlFor={`mobile-color-${color.id}`}
-                                className={`h-8 w-8 rounded-full ${color.color} cursor-pointer ring-offset-background transition-all hover:scale-110 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-accent peer-data-[state=checked]:ring-offset-2`}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Sizes */}
-                      <div>
-                        <h3 className="font-medium mb-3">Sizes</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {["XS", "S", "M", "L", "XL"].map((size) => (
-                            <div key={size} className="flex items-center">
-                              <Checkbox
-                                id={`mobile-size-${size.toLowerCase()}`}
-                                className="peer sr-only"
-                              />
-                              <Label
-                                htmlFor={`mobile-size-${size.toLowerCase()}`}
-                                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-secondary text-sm font-medium ring-offset-background transition-all hover:bg-accent/10 peer-data-[state=checked]:bg-accent peer-data-[state=checked]:text-accent-foreground"
-                              >
-                                {size}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Ratings */}
-                      <div>
-                        <h3 className="font-medium mb-3">Ratings</h3>
-                        <RadioGroup defaultValue="all">
-                          {[
-                            { id: "all", label: "All Ratings" },
-                            { id: "4-up", label: "4 Stars & Up" },
-                            { id: "3-up", label: "3 Stars & Up" },
-                            { id: "2-up", label: "2 Stars & Up" },
-                            { id: "1-up", label: "1 Star & Up" },
-                          ].map((rating) => (
-                            <div
-                              key={rating.id}
-                              className="flex items-center space-x-2"
-                            >
-                              <RadioGroupItem
-                                value={rating.id}
-                                id={`mobile-rating-${rating.id}`}
-                              />
-                              <Label
-                                htmlFor={`mobile-rating-${rating.id}`}
-                                className="text-sm font-normal cursor-pointer"
-                              >
-                                {rating.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
+                    <FilterSection isMobile={true} />
+                    <div className="mt-8 pt-6 border-t sticky bottom-0 bg-background">
+                      <SheetClose asChild>
+                        <Button
+                          className="w-full"
+                          onClick={() => setIsMobileFilterOpen(false)}
+                        >
+                          Show {filteredProducts.length} results
+                        </Button>
+                      </SheetClose>
                     </div>
                   </SheetContent>
                 </Sheet>
 
                 {/* Sort */}
                 <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <Select defaultValue="featured">
-                    <SelectTrigger className="w-[180px]">
+                  <SlidersHorizontal className="h-4 w-4 hidden sm:block" />
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[130px] sm:w-[180px]">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -405,56 +494,116 @@ export default async function ShopPage() {
               </div>
             </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
-                <ProductCard key={product._id.toString()} product={product} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-center mt-12">
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" disabled>
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="bg-accent text-accent-foreground"
-                >
-                  1
-                </Button>
-                <Button variant="outline">2</Button>
-                <Button variant="outline">3</Button>
-                <Button variant="outline" size="icon">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </Button>
+            {/* Loading state */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-secondary/20 rounded-lg h-80 animate-pulse"
+                  ></div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <>
+                {/* No results */}
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-16">
+                    <h3 className="text-xl font-medium mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-foreground/70 mb-6">
+                      Try adjusting your filters to find what you're looking
+                      for.
+                    </p>
+                    <Button onClick={resetFilters}>Clear all filters</Button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Products Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                      {currentProducts.map((product) => (
+                        <ProductCard
+                          key={product._id.toString()}
+                          product={product}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center mt-8 md:mt-12">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              setCurrentPage((prev) => Math.max(prev - 1, 1))
+                            }
+                            disabled={currentPage === 1}
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 19l-7-7 7-7"
+                              />
+                            </svg>
+                          </Button>
+                          {Array.from(
+                            { length: totalPages },
+                            (_, i) => i + 1,
+                          ).map((page) => (
+                            <Button
+                              key={page}
+                              variant="outline"
+                              className={
+                                currentPage === page
+                                  ? "bg-accent text-accent-foreground"
+                                  : ""
+                              }
+                              onClick={() => setCurrentPage(page)}
+                            >
+                              {page}
+                            </Button>
+                          ))}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              setCurrentPage((prev) =>
+                                Math.min(prev + 1, totalPages),
+                              )
+                            }
+                            disabled={currentPage === totalPages}
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
