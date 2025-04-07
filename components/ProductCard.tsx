@@ -13,7 +13,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
         <div className="relative h-64 w-full bg-gray-100">
           <Image
-            src={product.images[0] || "/placeholder.svg"} // Use designImage from MongoDB schema
+            src={product.images[0][0] || "/placeholder.svg"} // Use designImage from MongoDB schema
             alt={product.name}
             fill
             style={{ objectFit: "cover" }}

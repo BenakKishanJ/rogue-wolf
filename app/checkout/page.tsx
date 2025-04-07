@@ -21,7 +21,7 @@ interface CartItem {
     name: string;
     price: number;
     designImage?: string;
-    images?: string[];
+    images?: string[][];
   };
 }
 
@@ -319,7 +319,7 @@ export default function CheckoutPage() {
                   <Image
                     src={
                       item.product?.designImage ||
-                      item.product?.images?.[0] ||
+                      item.product?.images?.[0][0] ||
                       "/placeholder.png"
                     }
                     alt={item.product?.name || "Product"}

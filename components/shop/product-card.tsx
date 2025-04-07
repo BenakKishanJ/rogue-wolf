@@ -145,7 +145,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="h-full w-full"
           >
             <Image
-              src={product.images[0] || "/placeholder.svg"}
+              src={product.images[0][0] || "/placeholder.svg"}
               alt={product.name}
               fill
               className="object-cover"

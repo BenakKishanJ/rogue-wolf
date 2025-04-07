@@ -15,7 +15,7 @@ interface TransactionItem {
   color: string;
   size: string;
   price: number;
-  product?: { name: string; designImage?: string; images?: string[] };
+  product?: { name: string; designImage?: string; images?: string[][] };
 }
 
 interface DeliveryDetails {
@@ -175,7 +175,7 @@ export default function OrdersPage() {
                   <div key={index} className="flex items-center gap-4">
                     <Image
                       src={
-                        item.product?.images?.[0] ||
+                        item.product?.images?.[0][0] ||
                         item.product?.designImage ||
                         "/placeholder.png"
                       }

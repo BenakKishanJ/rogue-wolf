@@ -113,7 +113,7 @@ export default function CartPage() {
               >
                 <Image
                   src={
-                    item.product?.images?.[0] ||
+                    item.product?.images?.[0][0] ||
                     item.product?.designImage ||
                     "/placeholder.png"
                   }
