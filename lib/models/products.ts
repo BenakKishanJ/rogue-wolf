@@ -8,7 +8,7 @@ export interface IProductData {
   price: number;
   discount: number;
   rating: number;
-  images: string[];
+  images: string[][];
   designImage: string;
   colors: string[];
   sizes: string[];
@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     rating: { type: Number, min: 0, max: 5, default: 0 },
-    images: { type: [String], required: true },
+    images: { type: [[String]], required: true },
     designImage: { type: String, required: true },
     colors: { type: [String], required: true },
     sizes: { type: [String], required: true },

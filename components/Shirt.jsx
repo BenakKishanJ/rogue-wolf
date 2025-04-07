@@ -6,7 +6,6 @@ import { easing } from "maath";
 const Shirt = ({ color, logoTexture }) => {
   const { nodes, materials } = useGLTF("/shirt_baked.glb");
   const texture = useTexture(logoTexture);
-  const meshRef = React.useRef();
 
   useFrame((state, delta) => {
     easing.dampC(materials.lambert1.color, color, 0.25, delta);
@@ -14,15 +13,15 @@ const Shirt = ({ color, logoTexture }) => {
 
   return (
     <mesh
-      ref={meshRef}
       castShadow
       geometry={nodes.T_Shirt_male.geometry}
       material={materials.lambert1}
     >
+      {/* Back logo placement */}
       <Decal
-        position={[0, 0.04, 0.15]}
-        rotation={[0, 0, 0]}
-        scale={0.15}
+        position={[0, -0.05, -0.15]} // Position on back
+        rotation={[0, Math.PI, 0]} // Rotated to face outward
+        scale={0.3}
         map={texture}
         depthTest={false}
         depthWrite={true}
@@ -31,4 +30,5 @@ const Shirt = ({ color, logoTexture }) => {
   );
 };
 
+useGLTF.preload("/shirt_baked.glb");
 export default Shirt;

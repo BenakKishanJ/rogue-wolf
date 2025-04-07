@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import * as React from "react"; // Add for React.use()
+import * as React from "react";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -15,13 +15,14 @@ import CameraRig from "@/components/CameraRig";
 import Shirt from "@/components/Shirt";
 
 interface ThreeDViewPageProps {
-  params: Promise<{ id: string }>; // Update to Promise for async params
+  params: Promise<{ id: string }>;
 }
 
 export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
-  const { id } = React.use(params); // Unwrap params with React.use()
+  const { id } = React.use(params);
   const [product, setProduct] = useState<IProduct | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string>(""); // Default to empty, set later
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [rotationY, setRotationY] = useState(Math.PI);
 
   // Fetch product data
   useEffect(() => {
@@ -32,13 +33,12 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
       const data = await res.json();
       setProduct(data || null);
       if (data && data.colors.length > 0) {
-        setSelectedColor(data.colors[0]); // Set default to first available color
+        setSelectedColor(data.colors[0]);
       }
     }
     fetchProduct();
   }, [id]);
 
-  // Validate product
   if (!product) {
     return (
       <div className="container py-20 text-center">
@@ -78,11 +78,11 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                 shadows
                 camera={{ position: [0, 0, 2.5], fov: 25 }}
                 gl={{ preserveDrawingBuffer: true }}
+                style={{ position: "absolute", top: 0, left: 0 }}
               >
                 <ambientLight intensity={0.5} />
                 <Environment preset="city" />
-
-                <CameraRig>
+                <CameraRig rotationY={rotationY}>
                   <Backdrop />
                   <Center>
                     <Shirt
@@ -146,6 +146,33 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                   </RadioGroup>
                 </div>
 
+                {/* Rotation Controls */}
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">View Rotation</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setRotationY(0)}
+                      className="flex-1"
+                    >
+                      Front
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setRotationY(Math.PI / 2)}
+                      className="flex-1"
+                    >
+                      Side
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setRotationY(Math.PI)}
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                  </div>
+                </div>
                 {/* Controls Help Section */}
                 <div className="bg-secondary/10 rounded-lg p-4">
                   <h3 className="font-medium mb-2">Controls</h3>
@@ -153,6 +180,7 @@ export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
                     <li>• Click and drag to rotate</li>
                     <li>• Scroll to zoom in/out</li>
                     <li>• Double-click to reset view</li>
+                    <li>• Use buttons to switch between front/back</li>
                   </ul>
                 </div>
 

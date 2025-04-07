@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { easing } from "maath";
 
-const CameraRig = ({ children }) => {
+const CameraRig = ({ children, rotationY }) => {
   const group = useRef();
 
   useFrame((state, delta) => {
@@ -16,9 +16,14 @@ const CameraRig = ({ children }) => {
     easing.damp3(state.camera.position, targetPosition, 0.25, delta);
 
     if (group.current) {
+      // Only rotate around Y axis (sideways) and combine with pointer movement
       easing.dampE(
         group.current.rotation,
-        [state.pointer.y / 10, -state.pointer.x / 5, 0],
+        [
+          0, // Keep X rotation fixed (no up/down flipping)
+          rotationY - state.pointer.x / 2, // Combine preset rotation with drag
+          0, // Keep Z rotation fixed
+        ],
         0.25,
         delta,
       );

@@ -29,9 +29,29 @@ export const authOptions = {
     strategy: "jwt" as const,
   },
   callbacks: {
+    async jwt({ token, user }: { token: JWT; user?: any }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role || "customer";
+        token.name = user.name;
+        token.email = user.email;
+        token.image = user.image;
+        token.address = user.address;
+        token.pincode = user.pincode;
+        token.phone = user.phone;
+      }
+      return token;
+    },
     async session({ session, token }: { session: Session; token: JWT }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub; // Now TypeScript recognizes 'id'
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.image;
+        session.user.address = token.address;
+        session.user.pincode = token.pincode;
+        session.user.phone = token.phone;
       }
       return session;
     },

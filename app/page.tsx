@@ -1,4 +1,7 @@
 // app/page.tsx
+"use client";
+
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,28 +15,88 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/shop/product-card";
-import { IProduct } from "@/lib/models/products"; // Adjust path based on your structure
+import { IProduct } from "@/lib/models/products";
+import { motion } from "framer-motion";
 
 async function fetchProducts(): Promise<IProduct[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
-    cache: "no-store", // Fetch fresh data from MongoDB
+    cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to fetch products");
   return res.json();
 }
 
-export default async function Home() {
-  const products = await fetchProducts();
+// Define animation variants
+const sectionVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
+
+export default function Home() {
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const fetchedProducts = await fetchProducts();
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProducts();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>; // Simple loading state
+  }
 
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/10 dark:from-background dark:via-background dark:to-primary/10 z-0"></div>
 
         <div className="container relative z-10 px-4 md:px-6 py-20 md:py-32">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="animate-slide-left">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid md:grid-cols-2 gap-12 items-center"
+          >
+            <motion.div variants={itemVariants} className="animate-slide-left">
               <h1 className="hero-text mb-6">
                 ROGUE <span className="hero-gradient-text">WOLF</span>
               </h1>
@@ -58,9 +121,12 @@ export default async function Home() {
                   <Link href="#experience">EXPLORE FEATURES</Link>
                 </Button>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="relative animate-slide-right">
+            <motion.div
+              variants={itemVariants}
+              className="relative animate-slide-right"
+            >
               <div className="relative aspect-square rounded-full bg-gradient-to-br from-primary/20 to-accent/20 p-8 animate-float">
                 <div className="absolute inset-0 rounded-full overflow-hidden">
                   <Image
@@ -74,45 +140,81 @@ export default async function Home() {
                   NEW DROP
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
+
       {/* Featured Products */}
-      <section className="py-20 bg-background">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="py-20 bg-background"
+      >
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
-            <div>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12"
+          >
+            <motion.div variants={itemVariants}>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
                 FEATURED COLLECTION
               </h2>
               <p className="text-foreground/70 font-mono">
                 Discover our most popular designs
               </p>
-            </div>
-            <Button
-              asChild
-              variant="link"
-              className="text-accent mt-4 md:mt-0 font-mono"
-            >
-              <Link href="/shop" className="flex items-center">
-                VIEW ALL <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <Button
+                asChild
+                variant="link"
+                className="text-accent mt-4 md:mt-0 font-mono"
+              >
+                <Link href="/shop" className="flex items-center">
+                  VIEW ALL <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </motion.div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+          >
             {products.map((product) => (
-              <ProductCard key={product._id.toString()} product={product} />
+              <motion.div key={product._id.toString()} variants={itemVariants}>
+                <ProductCard product={product} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
+
       {/* 3D Experience Banner */}
-      <section className="py-20 bg-background">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="py-20 bg-background"
+      >
         <div className="container px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="order-2 md:order-1">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="grid md:grid-cols-2 gap-10 items-center"
+          >
+            <motion.div variants={itemVariants} className="order-2 md:order-1">
               <div className="inline-block rounded-lg bg-primary/20 px-3 py-1 text-sm text-primary mb-4 font-mono">
                 INNOVATIVE TECHNOLOGY
               </div>
@@ -133,25 +235,38 @@ export default async function Home() {
                   TRY 3D VIEWER
                 </Link>
               </Button>
-            </div>
-            <div className="order-1 md:order-2">
+            </motion.div>
+            <motion.div variants={itemVariants} className="order-1 md:order-2">
               <div className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 p-8 flex items-center justify-center">
                 <div className="text-6xl font-bold text-foreground">3D</div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>{" "}
+      </motion.section>
+
       {/* Virtual Try-On */}
-      <section className="py-20 bg-background">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="py-20 bg-background"
+      >
         <div className="container px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="grid md:grid-cols-2 gap-10 items-center"
+          >
+            <motion.div variants={itemVariants}>
               <div className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 p-8 flex items-center justify-center">
                 <div className="text-6xl font-bold text-foreground">TRY ON</div>
               </div>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={itemVariants}>
               <div className="inline-block rounded-lg bg-primary/20 px-3 py-1 text-sm text-primary mb-4 font-mono">
                 VIRTUAL EXPERIENCE
               </div>
@@ -172,25 +287,53 @@ export default async function Home() {
                   TRY IT ON
                 </Link>
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>{" "}
+      </motion.section>
+
       {/* Features */}
-      <section className="py-20 md:py-32">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="py-20 md:py-32"
+      >
         <div className="container px-4 md:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-display font-black mb-6">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="text-center mb-16"
+          >
+            <motion.h2
+              variants={itemVariants}
+              className="text-4xl md:text-6xl font-display font-black mb-6"
+            >
               WHY CHOOSE Rogue Wolf
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            </motion.h2>
+            <motion.p
+              variants={itemVariants}
+              className="text-xl text-muted-foreground max-w-2xl mx-auto"
+            >
               We combine premium quality with innovative technology for the
               ultimate shopping experience
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-card p-8 rounded-2xl shadow-sm">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            <motion.div
+              variants={itemVariants}
+              className="bg-card p-8 rounded-2xl shadow-sm"
+            >
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
@@ -201,9 +344,12 @@ export default async function Home() {
                 Our t-shirts are crafted from high-quality materials for
                 exceptional comfort and durability.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-card p-8 rounded-2xl shadow-sm">
+            <motion.div
+              variants={itemVariants}
+              className="bg-card p-8 rounded-2xl shadow-sm"
+            >
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <Cube className="h-6 w-6 text-primary" />
               </div>
@@ -214,9 +360,12 @@ export default async function Home() {
                 Examine every detail with our interactive 3D viewer before
                 making a purchase.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-card p-8 rounded-2xl shadow-sm">
+            <motion.div
+              variants={itemVariants}
+              className="bg-card p-8 rounded-2xl shadow-sm"
+            >
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <ShoppingBag className="h-6 w-6 text-primary" />
               </div>
@@ -227,9 +376,12 @@ export default async function Home() {
                 See how our t-shirts look on you with our innovative virtual
                 try-on technology.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-card p-8 rounded-2xl shadow-sm">
+            <motion.div
+              variants={itemVariants}
+              className="bg-card p-8 rounded-2xl shadow-sm"
+            >
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <Truck className="h-6 w-6 text-primary" />
               </div>
@@ -240,9 +392,12 @@ export default async function Home() {
                 We offer fast and reliable shipping to get your new t-shirts to
                 you quickly.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-card p-8 rounded-2xl shadow-sm">
+            <motion.div
+              variants={itemVariants}
+              className="bg-card p-8 rounded-2xl shadow-sm"
+            >
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <svg
                   className="h-6 w-6 text-primary"
@@ -265,9 +420,12 @@ export default async function Home() {
                 Not satisfied? We offer hassle-free returns within 30 days of
                 purchase.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-card p-8 rounded-2xl shadow-sm">
+            <motion.div
+              variants={itemVariants}
+              className="bg-card p-8 rounded-2xl shadow-sm"
+            >
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <svg
                   className="h-6 w-6 text-primary"
@@ -290,22 +448,44 @@ export default async function Home() {
                 Premium quality at competitive prices, with no compromise on
                 materials or craftsmanship.
               </p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
+
       {/* Newsletter */}
-      <section className="py-20 md:py-32 bg-primary text-white">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="py-20 md:py-32 bg-primary text-white"
+      >
         <div className="container px-4 md:px-6">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-4xl md:text-6xl font-display font-black mb-6">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="max-w-2xl mx-auto text-center"
+          >
+            <motion.h2
+              variants={itemVariants}
+              className="text-4xl md:text-6xl font-display font-black mb-6"
+            >
               JOIN THE REVOLUTION
-            </h2>
-            <p className="text-xl text-white/80 mb-8">
+            </motion.h2>
+            <motion.p
+              variants={itemVariants}
+              className="text-xl text-white/80 mb-8"
+            >
               Subscribe to get exclusive drops, special offers, and early access
               to new designs.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            </motion.p>
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            >
               <Input
                 type="email"
                 placeholder="YOUR EMAIL"
@@ -314,33 +494,54 @@ export default async function Home() {
               <Button className="bg-white text-primary hover:bg-white/90 font-display">
                 SUBSCRIBE
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
+
       {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-card">
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="py-20 md:py-32 bg-card"
+      >
         <div className="container px-4 md:px-6">
-          <div className="text-center">
-            <h2 className="text-4xl md:text-6xl font-display font-black mb-6">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="text-center"
+          >
+            <motion.h2
+              variants={itemVariants}
+              className="text-4xl md:text-6xl font-display font-black mb-6"
+            >
               READY TO EXPERIENCE THE FUTURE?
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            </motion.h2>
+            <motion.p
+              variants={itemVariants}
+              className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            >
               Explore our collection of premium t-shirts with innovative 3D
               preview and virtual try-on technology.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="rounded-full px-8 py-6 bg-primary hover:bg-primary/90 text-white font-display text-lg"
-            >
-              <Link href="/shop">
-                SHOP NOW <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
+            </motion.p>
+            <motion.div variants={itemVariants}>
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-8 py-6 bg-primary hover:bg-primary/90 text-white font-display text-lg"
+              >
+                <Link href="/shop">
+                  SHOP NOW <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }

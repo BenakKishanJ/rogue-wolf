@@ -38,10 +38,6 @@ export async function POST(request: Request) {
         deliveryDetails: JSON.stringify(deliveryDetails),
       },
     });
-    console.log(
-      "Order - Created with deliveryDetails in notes:",
-      deliveryDetails,
-    ); // Debug
     return NextResponse.json(order, { status: 200 });
   } catch (error: any) {
     console.error("Order creation error:", error);

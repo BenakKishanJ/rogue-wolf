@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.8.0",
+    "@aws-sdk/client-s3": "^3.779.0",
     "@hookform/resolvers": "^3.9.1",
     "@mediapipe/pose": "latest",
     "@radix-ui/react-accordion": "^1.2.2",

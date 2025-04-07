@@ -3,18 +3,23 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { Menu, Search, ShoppingBag, User, BookCheck } from "lucide-react";
+import { Menu, Search, ShoppingBag, User, BookCheck, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
+import { Input } from "@/components/ui/input";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Added state for sheet
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const router = useRouter();
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -26,6 +31,15 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+      setIsSearchOpen(false);
+    }
+  };
+
   const navLinks = [
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
@@ -33,7 +47,6 @@ export default function Header() {
     { name: "CONTACT", href: "/contact" },
   ];
 
-  // Function to close the menu
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
@@ -46,6 +59,32 @@ export default function Header() {
       )}
     >
       <div className="container flex items-center justify-between">
+        {/* Search overlay for mobile */}
+        {isSearchOpen && (
+          <div className="fixed inset-0 bg-background z-50 flex items-center p-4 md:hidden">
+            <form onSubmit={handleSearch} className="flex w-full gap-2">
+              <Input
+                autoFocus
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" variant="outline">
+                <Search className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsSearchOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </form>
+          </div>
+        )}
+
         <Link
           href="/"
           className="flex items-center text-2xl font-mono font-bold tracking-tight text-black"
@@ -62,6 +101,23 @@ export default function Header() {
             <span className="hidden md:block">ROGUE WOLF</span>
           </div>
         </Link>
+
+        {/* Desktop Search */}
+        <form
+          onSubmit={handleSearch}
+          className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-4"
+        >
+          <Input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Button type="submit" variant="outline">
+            <Search className="h-5 w-5" />
+          </Button>
+        </form>
+
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
@@ -79,7 +135,12 @@ export default function Header() {
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="hidden md:flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsSearchOpen(true)}
+          >
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </Button>
@@ -246,14 +307,6 @@ export default function Header() {
                       SIGN IN
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start font-mono text-lg"
-                    onClick={closeMobileMenu}
-                  >
-                    <Search className="h-5 w-5 mr-2" />
-                    SEARCH
-                  </Button>
                 </div>
               </div>
             </SheetContent>
