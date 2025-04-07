@@ -1,6 +1,7 @@
 // app/shop/page.tsx
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, Suspense } from "react"; // Added Suspense import
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Filter, SlidersHorizontal, X } from "lucide-react";
@@ -25,14 +26,17 @@ import {
 import ProductCard from "@/components/shop/product-card";
 import { IProduct } from "../../lib/models/products";
 
-export default function ShopPage() {
+// Opt out of static prerendering
+export const dynamic = "force-dynamic";
+
+function ShopPageContent() {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // Adjust this number as needed
+  const itemsPerPage = 6;
 
   // Filter states
   const [categories, setCategories] = useState<string[]>([]);
@@ -41,6 +45,7 @@ export default function ShopPage() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [rating, setRating] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("featured");
+
   // Search state
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
@@ -76,7 +81,6 @@ export default function ShopPage() {
     let result = [...products];
     let filterCount = 0;
 
-    // Apply search filter if there's a search query
     if (searchQuery) {
       result = result.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -84,7 +88,6 @@ export default function ShopPage() {
       filterCount += 1;
     }
 
-    // Apply category filter
     if (categories.length > 0) {
       result = result.filter((product) =>
         categories.some((cat) =>
@@ -94,7 +97,6 @@ export default function ShopPage() {
       filterCount += 1;
     }
 
-    // Apply price filter
     if (priceRange !== "all") {
       const [min, max] = priceRange.split("-").map((p) => parseInt(p || "0"));
       result = result.filter((product) => {
@@ -104,7 +106,6 @@ export default function ShopPage() {
       filterCount += 1;
     }
 
-    // Apply color filter
     if (selectedColors.length > 0) {
       result = result.filter((product) =>
         product.colors.some((color) => selectedColors.includes(color)),
@@ -112,7 +113,6 @@ export default function ShopPage() {
       filterCount += 1;
     }
 
-    // Apply size filter
     if (selectedSizes.length > 0) {
       result = result.filter((product) =>
         product.sizes?.some((size) =>
@@ -122,14 +122,12 @@ export default function ShopPage() {
       filterCount += 1;
     }
 
-    // Apply rating filter
     if (rating !== "all") {
       const minRating = parseInt(rating.split("-")[0]);
       result = result.filter((product) => product.rating >= minRating);
       filterCount += 1;
     }
 
-    // Apply sort
     switch (sortBy) {
       case "newest":
         result.sort((a, b) => {
@@ -153,7 +151,7 @@ export default function ShopPage() {
 
     setFilteredProducts(result);
     setActiveFilters(filterCount);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [
     products,
     categories,
@@ -171,7 +169,6 @@ export default function ShopPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // Reset all filters including search
   const resetFilters = () => {
     setCategories([]);
     setPriceRange("all");
@@ -181,13 +178,11 @@ export default function ShopPage() {
     setSortBy("featured");
     setCurrentPage(1);
 
-    // Clear search query from URL
     const params = new URLSearchParams(searchParams.toString());
     params.delete("search");
     router.replace(`/shop?${params.toString()}`);
   };
 
-  // Toggle category selection
   const toggleCategory = (category: string) => {
     setCategories((prev) =>
       prev.includes(category)
@@ -196,14 +191,12 @@ export default function ShopPage() {
     );
   };
 
-  // Toggle color selection
   const toggleColor = (color: string) => {
     setSelectedColors((prev) =>
       prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color],
     );
   };
 
-  // Toggle size selection
   const toggleSize = (size: string) => {
     setSelectedSizes((prev) =>
       prev.includes(size.toLowerCase())
@@ -212,10 +205,7 @@ export default function ShopPage() {
     );
   };
 
-  // Categories list
   const categoryOptions = ["Rogue Essentials", "Rogue Originals", "Vintage"];
-
-  // Price range options
   const priceOptions = [
     { id: "all", label: "All Prices" },
     { id: "0-500", label: "₹0 - ₹500" },
@@ -224,8 +214,6 @@ export default function ShopPage() {
     { id: "1500-2000", label: "₹1500 - ₹2000" },
     { id: "2000-", label: "₹2000+" },
   ];
-
-  // Color options
   const colorOptions = [
     { id: "black", color: "bg-black" },
     { id: "white", color: "bg-white border border-border" },
@@ -233,11 +221,7 @@ export default function ShopPage() {
     { id: "red", color: "bg-red-500" },
     { id: "green", color: "bg-green-500" },
   ];
-
-  // Size options
   const sizeOptions = ["XS", "S", "M", "L", "XL"];
-
-  // Rating options
   const ratingOptions = [
     { id: "all", label: "All Ratings" },
     { id: "4-up", label: "4 Stars & Up" },
@@ -246,10 +230,8 @@ export default function ShopPage() {
     { id: "1-up", label: "1 Star & Up" },
   ];
 
-  // Filter section component
   const FilterSection = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className="space-y-6">
-      {/* Categories */}
       <div>
         <h3 className="font-medium mb-3">Categories</h3>
         <div className="space-y-2">
@@ -273,7 +255,6 @@ export default function ShopPage() {
 
       <Separator />
 
-      {/* Price Range */}
       <div>
         <h3 className="font-medium mb-3">Price Range</h3>
         <RadioGroup value={priceRange} onValueChange={setPriceRange}>
@@ -296,7 +277,6 @@ export default function ShopPage() {
 
       <Separator />
 
-      {/* Colors */}
       <div>
         <h3 className="font-medium mb-3">Colors</h3>
         <div className="flex flex-wrap gap-2">
@@ -319,7 +299,6 @@ export default function ShopPage() {
 
       <Separator />
 
-      {/* Sizes */}
       <div>
         <h3 className="font-medium mb-3">Sizes</h3>
         <div className="flex flex-wrap gap-2">
@@ -344,7 +323,6 @@ export default function ShopPage() {
 
       <Separator />
 
-      {/* Ratings */}
       <div>
         <h3 className="font-medium mb-3">Ratings</h3>
         <RadioGroup value={rating} onValueChange={setRating}>
@@ -370,8 +348,6 @@ export default function ShopPage() {
   return (
     <div className="animate-fade-in pt-16 md:pt-20">
       <div className="container py-4 md:py-8">
-        {/* Breadcrumb */}
-
         <div className="flex items-center text-sm text-foreground/60 mb-4 md:mb-8">
           <Link href="/" className="hover:text-foreground">
             Home
@@ -400,7 +376,6 @@ export default function ShopPage() {
           )}
         </div>
 
-        {/* Active filters indicators (mobile only) */}
         {(activeFilters > 0 || searchQuery) && (
           <div className="flex items-center justify-between mb-4 md:hidden">
             <div className="text-sm text-foreground/70">
@@ -420,7 +395,6 @@ export default function ShopPage() {
         )}
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-          {/* Filters - Desktop */}
           <div className="hidden md:block w-64 flex-shrink-0">
             <div className="sticky top-24">
               <div className="flex items-center justify-between mb-6">
@@ -438,7 +412,6 @@ export default function ShopPage() {
               <FilterSection />
             </div>
           </div>
-          {/* Main Content */}
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h1 className="text-2xl md:text-3xl font-bold">
@@ -451,7 +424,6 @@ export default function ShopPage() {
               </h1>
 
               <div className="flex items-center gap-3">
-                {/* Mobile Filter Button */}
                 <Sheet
                   open={isMobileFilterOpen}
                   onOpenChange={setIsMobileFilterOpen}
@@ -506,7 +478,6 @@ export default function ShopPage() {
                   </SheetContent>
                 </Sheet>
 
-                {/* Sort */}
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4 hidden sm:block" />
                   <Select value={sortBy} onValueChange={setSortBy}>
@@ -529,7 +500,6 @@ export default function ShopPage() {
               </div>
             </div>
 
-            {/* Loading state */}
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
@@ -541,7 +511,6 @@ export default function ShopPage() {
               </div>
             ) : (
               <>
-                {/* No results */}
                 {filteredProducts.length === 0 ? (
                   <div className="text-center py-16">
                     <h3 className="text-xl font-medium mb-2">
@@ -555,7 +524,6 @@ export default function ShopPage() {
                   </div>
                 ) : (
                   <>
-                    {/* Products Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {currentProducts.map((product) => (
                         <ProductCard
@@ -565,7 +533,6 @@ export default function ShopPage() {
                       ))}
                     </div>
 
-                    {/* Pagination */}
                     {totalPages > 1 && (
                       <div className="flex justify-center mt-8 md:mt-12">
                         <div className="flex items-center gap-1">
@@ -643,5 +610,13 @@ export default function ShopPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div>Loading shop page...</div>}>
+      <ShopPageContent />
+    </Suspense>
   );
 }
