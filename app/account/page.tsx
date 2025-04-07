@@ -15,6 +15,7 @@ export default function AccountPage() {
   const [address, setAddress] = useState("");
   const [pincode, setPincode] = useState("");
   const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("customer"); // Default to "customer" until fetched
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -28,6 +29,7 @@ export default function AccountPage() {
         setAddress(userData.address || "");
         setPincode(userData.pincode || "");
         setPhone(userData.phone || "");
+        setRole(userData.role || "customer"); // Set role from MongoDB
       } else {
         console.error("Failed to fetch user profile:", await res.json());
       }
@@ -163,7 +165,7 @@ export default function AccountPage() {
             <strong>Phone:</strong> {phone || "Not set"}
           </p>
           <p>
-            <strong>Role:</strong> {session.user.role || "customer"}
+            <strong>Role:</strong> {role}
           </p>
           <p>
             <strong>ID:</strong> {session.user.id}
@@ -239,6 +241,15 @@ export default function AccountPage() {
             Sign Out
           </Button>
         </div>
+
+        {/* Admin Button */}
+        {["admin", "superadmin"].includes(role) && (
+          <div className="space-y-4">
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/admin">Admin Dashboard</Link>
+            </Button>
+          </div>
+        )}
 
         {/* Delete Account */}
         <div className="space-y-4">

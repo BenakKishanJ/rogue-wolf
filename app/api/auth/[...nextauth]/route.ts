@@ -31,7 +31,6 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: any }) {
       if (user) {
-        // Initial sign-in: copy all fields from user object
         token.id = user.id;
         token.role = user.role || "customer";
         token.name = user.name;
@@ -45,7 +44,6 @@ export const authOptions = {
     },
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user && token.id) {
-        // Always update session with all token fields
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.name = token.name;
