@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PageLoader } from "@/components/ui/page-loader";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -40,7 +41,12 @@ export default function AdminDashboard() {
 
   // Handle loading states
   if (status === "loading" || (status === "authenticated" && loadingProfile)) {
-    return <div className="container py-20 text-center">Loading...</div>;
+    return (
+      <>
+        <PageLoader isLoading={true} />
+        <div className="container py-20 text-center">Loading...</div>
+      </>
+    );
   }
 
   // Check authentication and role from MongoDB

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { IProduct } from "../../../lib/models/products"; // Adjust path
 import * as poseDetection from "@tensorflow-models/pose-detection";
 import * as tf from "@tensorflow/tfjs";
+import { PageLoader } from "@/components/ui/page-loader";
 
 interface TryOnPageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,7 @@ export default function TryOnPage({ params }: TryOnPageProps) {
   const [product, setProduct] = useState<IProduct | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [cameraActive, setCameraActive] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,13 +42,20 @@ export default function TryOnPage({ params }: TryOnPageProps) {
   // Fetch product data
   useEffect(() => {
     async function fetchProduct() {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
-      );
-      const data = await res.json();
-      setProduct(data || null);
-      if (data && data.colors.length > 0) {
-        setSelectedColor(data.colors[0]); // Set default to first available color
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
+        );
+        const data = await res.json();
+        setProduct(data || null);
+        if (data && data.colors.length > 0) {
+          setSelectedColor(data.colors[0]); // Set default to first available color
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchProduct();
@@ -362,14 +371,26 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     setStatus("Camera stopped");
   };
 
+  if (loading) {
+    return (
+      <>
+        <PageLoader isLoading={true} />
+        <div className="container py-20 text-center">Loading product...</div>
+      </>
+    );
+  }
+
   if (!product) {
     return (
-      <div className="container py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product not found</h1>
-        <Button asChild>
-          <Link href="/shop">Back to Shop</Link>
-        </Button>
-      </div>
+      <>
+        <PageLoader isLoading={true} />
+        <div className="container py-20 text-center">
+          <h1 className="text-2xl font-bold mb-4">Product not found</h1>
+          <Button asChild>
+            <Link href="/shop">Back to Shop</Link>
+          </Button>
+        </div>
+      </>
     );
   }
 
