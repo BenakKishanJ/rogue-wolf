@@ -22,6 +22,7 @@ export default function TryOnPage({ params }: TryOnPageProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [cameraActive, setCameraActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingComplete, setLoadingComplete] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -44,6 +45,7 @@ export default function TryOnPage({ params }: TryOnPageProps) {
     async function fetchProduct() {
       try {
         setLoading(true);
+        setLoadingComplete(false);
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
         );
@@ -55,7 +57,11 @@ export default function TryOnPage({ params }: TryOnPageProps) {
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {
-        setLoading(false);
+        setLoadingComplete(true);
+        // Keep loading state true for minimum duration
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
       }
     }
     fetchProduct();
@@ -374,7 +380,14 @@ export default function TryOnPage({ params }: TryOnPageProps) {
   if (loading) {
     return (
       <>
-        <PageLoader isLoading={true} />
+        <PageLoader 
+          isLoading={true} 
+          onLoadingComplete={() => {
+            if (loadingComplete) {
+              setLoading(false);
+            }
+          }}
+        />
         <div className="container py-20 text-center">Loading product...</div>
       </>
     );
