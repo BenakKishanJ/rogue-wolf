@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/shop/product-card";
 import { IProduct } from "@/lib/models/products";
 import { motion } from "framer-motion";
+import { PageLoader } from "@/components/ui/page-loader";
 
 async function fetchProducts(): Promise<IProduct[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
@@ -75,7 +76,7 @@ export default function Home() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>; // Simple loading state
+    return <PageLoader isLoading={true} minDuration={2000} />;
   }
 
   return (

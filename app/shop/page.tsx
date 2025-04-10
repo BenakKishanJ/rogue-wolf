@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import ProductCard from "@/components/shop/product-card";
 import { IProduct } from "../../lib/models/products";
+import { PageLoader } from "@/components/ui/page-loader";
 
 // Opt out of static prerendering
 export const dynamic = "force-dynamic";
@@ -346,7 +347,8 @@ function ShopPageContent() {
   );
 
   return (
-    <div className="animate-fade-in pt-16 md:pt-20">
+    <div className="animate-fade-in pt-20 bg-background">
+      <PageLoader isLoading={loading} />
       <div className="container py-4 md:py-8">
         <div className="flex items-center text-sm text-foreground/60 mb-4 md:mb-8">
           <Link href="/" className="hover:text-foreground">

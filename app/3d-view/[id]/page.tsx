@@ -13,31 +13,56 @@ import { Environment, Center } from "@react-three/drei";
 import Backdrop from "@/components/Backdrop";
 import CameraRig from "@/components/CameraRig";
 import Shirt from "@/components/Shirt";
+import { useParams } from "next/navigation";
+import { PageLoader } from "@/components/ui/page-loader";
 
-interface ThreeDViewPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function ThreeDViewPage({ params }: ThreeDViewPageProps) {
-  const { id } = React.use(params);
+export default function ThreeDViewPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [product, setProduct] = useState<IProduct | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [rotationY, setRotationY] = useState(Math.PI);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch product data
   useEffect(() => {
     async function fetchProduct() {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
-      );
-      const data = await res.json();
-      setProduct(data || null);
-      if (data && data.colors.length > 0) {
-        setSelectedColor(data.colors[0]);
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
+        );
+        const data = await res.json();
+        setProduct(data || null);
+        if (data && data.colors.length > 0) {
+          setSelectedColor(data.colors[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setError("Failed to load product data");
+      } finally {
+        setLoading(false);
       }
     }
     fetchProduct();
   }, [id]);
+
+  if (loading) {
+    return (
+      <>
+        <PageLoader isLoading={true} />
+        <div className="container py-20 text-center">Loading 3D view...</div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-20 text-center text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   if (!product) {
     return (

@@ -24,6 +24,7 @@ import ProductCard from "@/components/shop/product-card";
 import { IProduct } from "../../../lib/models/products";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { PageLoader } from "@/components/ui/page-loader";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -39,24 +40,32 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      const productRes = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
-      );
-      const productData = await productRes.json();
-      setProduct(productData || null);
-
-      if (productData) {
-        const relatedRes = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/related?category=${productData.category}&id=${id}`,
+    async function fetchProduct() {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
         );
-        const relatedData = await relatedRes.json();
-        setRelatedProducts(relatedData || []);
+        const data = await res.json();
+        setProduct(data || null);
+
+        if (data) {
+          const relatedRes = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/related?category=${data.category}&id=${id}`,
+          );
+          const relatedData = await relatedRes.json();
+          setRelatedProducts(relatedData || []);
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
       }
     }
-    loadData();
+    fetchProduct();
   }, [id]);
 
   const addToCart = async () => {
@@ -118,6 +127,15 @@ export default function ProductPage({ params }: ProductPageProps) {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <>
+        <PageLoader isLoading={true} />
+        <div className="container py-20 text-center">Loading product...</div>
+      </>
+    );
+  }
 
   if (!product) {
     return (
@@ -188,7 +206,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   className="absolute inset-0"
                 >
                   <Image
-                    src={productImages[activeImageIndex] || "/TShirt.png"}
+                    src={String(productImages[activeImageIndex]) || "/TShirt.png"}
                     alt={product.name}
                     fill
                     className="object-cover"
@@ -240,7 +258,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   onClick={() => setActiveImageIndex(index)}
                 >
                   <Image
-                    src={image || "/TShirt.png"}
+                    src={String(image) || "/TShirt.png"}
                     alt={`${product.name} - Image ${index + 1}`}
                     fill
                     className="object-cover"
